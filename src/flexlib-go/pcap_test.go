@@ -23,13 +23,33 @@ import (
 	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
+	"github.com/lucasb-eyer/go-colorful"
 	"gopkg.in/hraban/opus.v2"
 	"image"
-	"image/color"
+	"image/draw"
 	"image/png"
 	"os"
 	"testing"
 )
+
+type GradientTable []struct {
+	Col colorful.Color
+	Pos float64
+}
+
+/* thx https://github.com/lucasb-eyer/go-colorful/blob/master/doc/gradientgen/gradientgen.go*/
+func (self GradientTable) GetInterpolatedColorFor(t float64) colorful.Color {
+	for i := 0; i < len(self)-1; i++ {
+		c1 := self[i]
+		c2 := self[i+1]
+		if c1.Pos <= t && t <= c2.Pos {
+			t := (t - c1.Pos) / (c2.Pos - c1.Pos)
+			return c1.Col.BlendHcl(c2.Col, t).Clamped()
+		}
+	}
+
+	return self[len(self)-1].Col
+}
 
 func TestParsePcap(t *testing.T) {
 
@@ -45,7 +65,17 @@ func TestParsePcap(t *testing.T) {
 	TCP_FRAGMENTATION_SIZE := 1514
 
 	// waterfall render img canvas
-	var img = image.NewRGBA(image.Rect(0, 0, 2500, 560*3))
+	var img = image.NewRGBA(image.Rect(0, 0, 2460, 560*3))
+
+	keypoints := GradientTable{
+		{MustParseHex("#000000"), 0.0},
+		{MustParseHex("#0000ff"), 0.15},
+		{MustParseHex("#00FF00"), 0.30},
+		{MustParseHex("#ffff00"), 0.45},
+		{MustParseHex("#ff0000"), 0.60},
+		{MustParseHex("#800080"), 0.75},
+		{MustParseHex("#ffffff"), 1.0},
+	}
 
 	// opus stream test output
 	f, err := os.Create("../../test_output/opus_decoded_float_32_LE_24000.raw")
@@ -133,7 +163,7 @@ func TestParsePcap(t *testing.T) {
 					break
 				case vita.SL_VITA_WATERFALL_CLASS:
 					tile := vita.ParseVitaWaterfall(payload, preamble)
-					renderAppend(_countWaterfall*3, tile, img)
+					renderAppend(_countWaterfall*3, tile, img, keypoints)
 					_countWaterfall++
 					break
 				default:
@@ -164,29 +194,35 @@ func TestParsePcap(t *testing.T) {
 		fmt.Printf("_countUnknown %d\n", _countUnknown)
 		fmt.Printf("_countIf %d\n", _countIf)
 
-		f, _ := os.OpenFile("../../test_results/waterfall.png", os.O_WRONLY|os.O_CREATE, 0600)
+		f, _ := os.OpenFile("../../test_output/waterfall.png", os.O_WRONLY|os.O_CREATE, 0600)
 		defer f.Close()
 		png.Encode(f, img)
 
 	}
 }
-func renderAppend(y int, tile *sdrobjects.SdrWaterfallTile, rgba *image.RGBA) {
+func renderAppend(y int, tile *sdrobjects.SdrWaterfallTile, img *image.RGBA, keypoints GradientTable) {
 	i := 0
+	cBlackLevel := keypoints.GetInterpolatedColorFor(0.0)
+
 	for value := range tile.Data {
+		gain := 1.125
+		pVal := (float64(tile.Data[value]))
+		cv := (1.0 / (65535.0)) * (pVal * gain)
+		c := cBlackLevel
 
-		// poor man's color mapping
-		gain := 1.8
-		cv := uint8((255.0 / (65535.0)) * (float64(tile.Data[value]) * gain))
-
-		if tile.AutoBlackLevel > uint32(tile.Data[value]) {
-			cv = 0
+		if (tile.Data[value] - uint16(tile.AutoBlackLevel)) >= 1 {
+			c = keypoints.GetInterpolatedColorFor(cv)
 		}
 
-		c := color.RGBA{cv, 0, 255 - cv, 255}
-		rgba.Set(i, y, c)
-		rgba.Set(i, y+1, c)
-		rgba.Set(i, y+2, c)
+		draw.Draw(img, image.Rect(i, y, i+1, y+3), &image.Uniform{c}, image.ZP, draw.Src)
 		i++
-		cv++
 	}
+}
+
+func MustParseHex(s string) colorful.Color {
+	c, err := colorful.Hex(s)
+	if err != nil {
+		panic("MustParseHex: " + err.Error())
+	}
+	return c
 }
