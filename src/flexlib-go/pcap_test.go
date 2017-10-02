@@ -65,8 +65,9 @@ func TestParsePcap(t *testing.T) {
 
 	TCP_FRAGMENTATION_SIZE := 1514
 
-	// waterfall render img canvas
-	var img = image.NewRGBA(image.Rect(0, 0, 2460, 560*3))
+	// waterfall render imgWaterfall canvas
+	var imgWaterfall = image.NewRGBA(image.Rect(0, 0, 2460, 560*3))
+	var imgFFT = image.NewRGBA(image.Rect(0, 0, 1630, 900))
 
 	keypoints := GradientTable{
 		{MustParseHex("#000000"), 0.0},
@@ -150,8 +151,11 @@ func TestParsePcap(t *testing.T) {
 				switch preamble.Class_id.PacketClassCode {
 
 				case vita.SL_VITA_FFT_CLASS:
-					vita := vita.ParseVitaFFT(payload, preamble)
-					fmt.Sprintf("%d", vita.NumBins)
+					fftPacket := vita.ParseVitaFFT(payload, preamble)
+					if _countFFT%5 == 0 {
+						renderAppendFFTPacket(fftPacket, imgFFT)
+					}
+					fmt.Sprintf("%d", fftPacket.NumBins)
 					_countFFT++
 					break
 				case vita.SL_VITA_OPUS_CLASS:
@@ -179,7 +183,7 @@ func TestParsePcap(t *testing.T) {
 					break
 				case vita.SL_VITA_WATERFALL_CLASS:
 					tile := vita.ParseVitaWaterfall(payload, preamble)
-					renderAppend(_countWaterfall*3, tile, img, keypoints)
+					renderAppendWaterfallTile(_countWaterfall*3, tile, imgWaterfall, keypoints)
 					_countWaterfall++
 					break
 				default:
@@ -215,11 +219,20 @@ func TestParsePcap(t *testing.T) {
 
 		f, _ := os.OpenFile("../../test_output/waterfall.png", os.O_WRONLY|os.O_CREATE, 0600)
 		defer f.Close()
-		png.Encode(f, img)
+		png.Encode(f, imgWaterfall)
+
+		fFFT, _ := os.OpenFile("../../test_output/fft.png", os.O_WRONLY|os.O_CREATE, 0600)
+		defer fFFT.Close()
+		png.Encode(fFFT, imgFFT)
 
 	}
 }
-func renderAppend(y int, tile *sdrobjects.SdrWaterfallTile, img *image.RGBA, keypoints GradientTable) {
+func renderAppendFFTPacket(packet *sdrobjects.SdrFFTPacket, rgba *image.RGBA) {
+	for i := 0; i < int(packet.NumBins); i++ {
+		rgba.Set(i, int(packet.Payload[i]), MustParseHex("#0000FF"))
+	}
+}
+func renderAppendWaterfallTile(y int, tile *sdrobjects.SdrWaterfallTile, img *image.RGBA, keypoints GradientTable) {
 	i := 0
 	cBlackLevel := keypoints.GetInterpolatedColorFor(0.0)
 
