@@ -72,14 +72,14 @@ type VitaTrailer struct {
 }
 
 type VitaHeader struct {
-	Pkt_type     VitaPacketType
-	C            bool
-	T            bool
-	Tsi          VitaTimeStampIntegerType
-	Tsf          VitaTimeStampFractionalType
-	Packet_count uint16
-	Packet_size  uint16
-	payload_bytes int
+	Pkt_type             VitaPacketType
+	C                    bool
+	T                    bool
+	Tsi                  VitaTimeStampIntegerType
+	Tsf                  VitaTimeStampFractionalType
+	Packet_count         uint16
+	Packet_size          uint16
+	payload_cutoff_bytes int
 }
 
 type VitaPacketPreamble struct {
@@ -112,5 +112,5 @@ const (
 	SL_VITA_IF_WIDE_CLASS_96kHz  = uint16(0x02E5)
 	SL_VITA_IF_WIDE_CLASS_192kHz = uint16(0x02E6)
 	MAX_VITA_PACKET_SIZE         = uint16(16384)
-	FLEX_OUI                     = uint16(0x1C2D) 
+	FLEX_OUI                     = uint16(0x1C2D)
 )

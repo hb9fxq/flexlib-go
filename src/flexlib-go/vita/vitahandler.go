@@ -19,6 +19,7 @@ package vita
 
 import (
 	"../sdrobjects"
+	"bytes"
 	"encoding/binary"
 	"errors"
 )
@@ -74,16 +75,60 @@ func ParseVitaPreamble(data []byte) (error, *VitaPacketPreamble, []byte) {
 		index += 8
 	}
 
-	if(header.T){
+	if header.T {
 		index += 4
+		header.payload_cutoff_bytes = 4
 	}
-
-	header.payload_bytes = (index *-1) + header.payload_bytes
 
 	return nil, &vitaPacketPreamble, data[index:]
 }
 
-func ParseVitaWaterfall(data []byte, preamble *VitaPacketPreamble) (*sdrobjects.SdrWaterfallTile) {
+func ParseVitaFFT(data []byte, preamble *VitaPacketPreamble) *sdrobjects.SdrFFTPacket {
+
+	index := 0
+	var fftPacket sdrobjects.SdrFFTPacket
+
+	fftPacket.StartBin_index = binary.BigEndian.Uint32(data[index : index+4])
+	index += 4
+
+	fftPacket.NumBins = binary.BigEndian.Uint32(data[index : index+4])
+	index += 4
+
+	fftPacket.BinSize = binary.BigEndian.Uint32(data[index : index+4])
+	index += 4
+
+	fftPacket.FrameIndex = binary.BigEndian.Uint32(data[index : index+4])
+	index += 4
+
+	for i := 0; i < (len(data))-preamble.Header.payload_cutoff_bytes-index; i += 2 {
+		fftPacket.Payload = append(fftPacket.Payload, binary.BigEndian.Uint16(data[i+index:i+index+2]))
+	}
+
+	return &fftPacket
+}
+
+func ParseVitaMeterPacket(data []byte, preamble *VitaPacketPreamble) *sdrobjects.SdrMeterPacket {
+	index := 0
+	var meterPacket sdrobjects.SdrMeterPacket
+
+	numberOfMeters := (len(data) - preamble.Header.payload_cutoff_bytes) / 4
+
+	for i := 0; i < numberOfMeters; i++ {
+
+		meterPacket.Ids = append(meterPacket.Ids, binary.BigEndian.Uint16(data[index:index+2]))
+		index += 2
+		buf := bytes.NewBuffer(data[index : index+2])
+		var valueRes int16
+		binary.Read(buf, binary.BigEndian, &valueRes)
+		index += 2
+		meterPacket.Vals = append(meterPacket.Vals, valueRes)
+	}
+
+	return &meterPacket
+
+}
+
+func ParseVitaWaterfall(data []byte, preamble *VitaPacketPreamble) *sdrobjects.SdrWaterfallTile {
 	index := 0
 	var wftile sdrobjects.SdrWaterfallTile
 
@@ -108,16 +153,21 @@ func ParseVitaWaterfall(data []byte, preamble *VitaPacketPreamble) (*sdrobjects.
 	wftile.AutoBlackLevel = binary.BigEndian.Uint32(data[index : index+4])
 	index += 4
 
-
-	for i := 0; i < (len(data)-index); i+=2 {
-		wftile.Data = append(wftile.Data, binary.BigEndian.Uint16(data[i : i +2]))
+	for i := 0; i < (len(data))-preamble.Header.payload_cutoff_bytes-index; i += 2 {
+		wftile.Data = append(wftile.Data, binary.BigEndian.Uint16(data[i+index:i+index+2]))
 	}
 
 	return &wftile
 }
 
+func ParseVitaOpus(data []byte, preamble *VitaPacketPreamble) []byte {
+	return data[:len(data)-preamble.Header.payload_cutoff_bytes]
+}
 
+func ParseFData(data []byte, preamble *VitaPacketPreamble) []byte {
+	return data[:len(data)-preamble.Header.payload_cutoff_bytes] // TODO IQ/Streams
+}
 
-func ParseVitaOpus(data []byte, preamble *VitaPacketPreamble) ([]byte) {
-	return data[:]
+func ParseDiscoveryPackage(data []byte, preamble *VitaPacketPreamble) string {
+	return string(data[:len(data)-4])
 }

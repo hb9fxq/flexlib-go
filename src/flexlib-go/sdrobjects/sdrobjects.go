@@ -21,11 +21,26 @@ type VitaPacketType int
 
 type SdrWaterfallTile struct {
 	FirstPixelFreq uint64
-	BinBandwidth uint64
+	BinBandwidth   uint64
 	LineDurationMS uint32
-	Width uint16
-	Height uint16
-	Timecode uint32
+	Width          uint16
+	Height         uint16
+	Timecode       uint32
 	AutoBlackLevel uint32
-	Data []uint16
+	Data           []uint16
 }
+
+type SdrFFTPacket struct {
+	StartBin_index uint32
+	NumBins        uint32
+	BinSize        uint32
+	FrameIndex     uint32
+	Payload        []uint16
+}
+
+type SdrMeterPacket struct {
+	Ids  []uint16
+	Vals []int16
+}
+
+
