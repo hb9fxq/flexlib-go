@@ -14,17 +14,28 @@ _Options:_
 * **RADIO** IP address of the radio
 * **MYUDP** UDP port on local machine that the radio will send VITA49 traffic. Must be a free port on your machine. Check your firewall! 
 * **CH** DAX-IQ channel to stream.
-* **FWD** Endpoint to send the Float32 IQ data to. You can find a sample for GNU Radio under https://github.com/krippendorf/flexlib-go/tree/master/GRC/iq-transfer
+* **FWD** Endpoint to send the Float32 IQ data to. If not supplied, the data is written to stdout and can be used for piping. You can find a sample for GNU Radio under https://github.com/krippendorf/flexlib-go/tree/master/GRC/iq-transfer
 * **RATE** SampleRate in kHz, Possible Values: 24 48 96 192
 
 __e.g.__
 
-**./iq-transfer_linux64  --RADIO=192.168.92.8 --MYUDP=7799 --CH=1 --RATE=192 --FWD=127.0.0.1:2345**
+send data 127.0.0.1:2345 **./iq-transfer_linux64  --RADIO=192.168.92.8 --MYUDP=7799 --CH=1 --RATE=192 --FWD=127.0.0.1:2345**
+ 
+record IQ Data to a file **./iq-transfer_linux64  --RADIO=192.168.92.8 --MYUDP=7799 --CH=1 --RATE=192 > "$(date +"%FT%T").raw"**
 
 ![alt text](https://github.com/krippendorf/flexlib-go/raw/master/GRC/iq-transfer/iq_transfer_fft.png "FFT with GRC using iq-transfer util")
 
-![alt text](https://github.com/krippendorf/flexlib-go/raw/master/GRC/iq-transfer/2017-10-07_20_15_54-SmartSDR-Win.png "FFT with GRC using iq-transfer util")
+![alt text](https://github.com/krippendorf/flexlib-go/raw/master/GRC/iq-transfer/2017-10-07_20_15_54-SmartSDR-Win.png "DAX IQ setting in SmartSDR")
 
+#### DAX IQ Data to OpenWebRx ### 
+
+Use the following device command in config_webrx.py
+```
+start_rtl_command="/home/f102/wrk/flexlib-go/bin/iq-transfer_linux64 --RADIO=192.168.92.8 --MYUDP=7799 --CH=1 --RATE=192"
+format_conversion=""
+```
+
+![alt text](https://github.com/krippendorf/flexlib-go/raw/master/GRC/iq-transfer/openwebrx.png "DAX IQ to OpenWebRX")
 
 
 ## Status
