@@ -1,6 +1,7 @@
 package obj
 
 import (
+	"errors"
 	"github.com/krippendorf/flexlib-go/sdrobjects"
 	"github.com/krippendorf/flexlib-go/vita"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type RadioData struct {
@@ -30,7 +32,8 @@ type RadioContext struct {
 	ChannelVitaIfData        chan *sdrobjects.SdrIfData
 	ChannelVitaMeter         chan *sdrobjects.SdrMeterPacket
 	ChannelVitaWaterfallTile chan *sdrobjects.SdrWaterfallTile
-	Panadapters              map[string]Panadapter
+	Panadapters              sync.Map
+	IqStreams                sync.Map
 	Debug                    bool
 }
 
@@ -147,7 +150,7 @@ func subscribeRadioUpdates(conn *net.TCPConn, ctx *RadioContext) {
 				} else {
 					ctx.ChannelRadioResponse <- responseLine
 					parseResponseLine(ctx, responseLine)
-					if(ctx.Debug){
+					if ctx.Debug {
 						l.Println("DEBU:RESP:" + responseLine)
 					}
 				}
@@ -160,44 +163,126 @@ func subscribeRadioUpdates(conn *net.TCPConn, ctx *RadioContext) {
 	}
 }
 func parseResponseLine(context *RadioContext, respLine string) {
-	if strings.Contains(respLine, "display pan") {
-		parsePanAdapterParams(context, respLine)
+
+	_, message := parseReplyStringPrefix(respLine)
+
+	if strings.Contains(message, "display pan") {
+		parsePanAdapterParams(context, message)
+	} else if strings.Contains(message, "daxiq ") {
+		parseDaxIqStatusParams(context, message)
 	}
 }
+
 func parsePanAdapterParams(context *RadioContext, i string) {
+	/*
+		>0x40000000 wnb=0 wnb_level=50 wnb_updating=0 x_pixels=490 y_pixels=535 center=3.792057 bandwidth=0.885342 min_dbm=-126.84 max_dbm=-66.812 fps=5 average=70 weighted_average=0 rfgain=0 rxant=ANT2 wide=1 loopa=0 loopb=0 band=80 daxiq=0 daxiq_rate=0 capacity=16 available=16 waterfall=42000000 min_bw=0.004919999957085 max_b<>w=14.74560058594 xvtr= pre= ant_list=ANT1,ANT2,RX_A,XVTR<
+	*/
+	_, res, objectValue := parseKeyValueString(i, 1)
 
-	if context.Panadapters == nil {
-		context.Panadapters = map[string]Panadapter{}
+	var panadapter Panadapter
+	panadapter.Id = objectValue
+	dirty := false;
+
+	actual, loaded := context.Panadapters.LoadOrStore(objectValue, panadapter)
+
+	if(loaded){
+		panadapter = actual.(Panadapter)
 	}
 
-	tokens := strings.Split(i, " ")
-
-	var pan Panadapter
-
-	if val, ok := context.Panadapters[tokens[2]]; ok {
-		pan = val
+	if val, ok := res["center"]; ok {
+		rawFloatCenter, _ := strconv.ParseFloat(val, 64)
+		panadapter.Center = int32(rawFloatCenter*1000000)
+		dirty = true
 	}
 
-	for rngAttr := range tokens[3:] {
+	if dirty {
+		context.Panadapters.Store(objectValue, panadapter)
+	}
+}
 
-		if strings.Index(tokens[rngAttr+3], "=") < 0 {
-			continue
+func parseDaxIqStatusParams(context *RadioContext, i string) {
+
+
+	_, res, objectValue := parseKeyValueString(i, 1)
+
+	streamId, _ := strconv.Atoi(objectValue)
+	var iqStream IqStream
+	iqStream.Id = streamId
+	dirty := false;
+
+	actual, loaded := context.IqStreams.LoadOrStore(objectValue, iqStream)
+
+	if(loaded){
+		iqStream = actual.(IqStream)
+	}
+
+	if val, ok := res["pan"]; ok {
+		iqStream.Pan = val
+		dirty = true
+	}
+
+	if val, ok := res["rate"]; ok {
+		iqStream.Rate, _ = strconv.Atoi(val)
+		dirty = true
+	}
+
+	if dirty {
+		context.IqStreams.Store(objectValue, iqStream)
+	}
+}
+
+func parseReplyStringPrefix(in string) (string, string) {
+	var prefix string
+	var message string
+
+	tokens := strings.Split(in, "|")
+
+	if len(tokens) == 2 {
+		return tokens[0], tokens[1]
+	}
+
+	return prefix, message
+}
+
+func parseKeyValueString(in string, words int) (error, map[string]string, string) {
+
+	var res map[string]string
+	res = map[string]string{}
+
+	tokens := strings.Split(in, " ")
+
+	if len(tokens) == 0 {
+		return errors.New("no tokens found"), res, ""
+	}
+
+	if strings.Index(in, "=") < 0 {
+		return errors.New("not a key value list"), res, ""
+	}
+
+	skipedWords := 0
+	var objectValue string
+	for rngAttr := range tokens[:] {
+
+		contentTokens := strings.Split(tokens[rngAttr], " ")
+
+		for cntToken := range contentTokens {
+
+			keyValueTokens := strings.Split(contentTokens[cntToken], "=")
+
+			if len(keyValueTokens) == 2 {
+				res[keyValueTokens[0]] = keyValueTokens[1]
+			} else if len(keyValueTokens) == 1 {
+
+				if skipedWords == words { // first prefix is object identifier itself
+					objectValue = keyValueTokens[0]
+				} else {
+					skipedWords++
+				}
+			}
 		}
-
-		attrName := strings.Split(tokens[rngAttr+3], "=")[0]
-		val := strings.Split(tokens[rngAttr+3], "=")[1]
-
-		switch attrName {
-		case "center":
-			floatVal, _ := strconv.ParseFloat(val, 32)
-			pan.center = float32(floatVal)
-			break
-		}
-
 	}
 
-	context.Panadapters[tokens[2]] = pan
-
+	return nil, res, objectValue
 }
 
 func subscribeRadioUdp(ctx *RadioContext) {
@@ -253,7 +338,6 @@ func dispatchDataToChannels(ctx *RadioContext, data *RadioData) {
 			if nil != ctx.ChannelVitaOpus {
 				ctx.ChannelVitaOpus <- data.Payload[:len(data.Payload)-data.Preampble.Header.Payload_cutoff_bytes]
 			}
-
 			break
 		case vita.SL_VITA_IF_NARROW_CLASS:
 			if nil != ctx.ChannelVitaIfData {
@@ -264,7 +348,6 @@ func dispatchDataToChannels(ctx *RadioContext, data *RadioData) {
 			if nil != ctx.ChannelVitaMeter {
 				ctx.ChannelVitaMeter <- vita.ParseVitaMeterPacket(data.Payload, data.Preampble)
 			}
-
 			break
 		case vita.SL_VITA_DISCOVERY_CLASS:
 			// maybe later - we use static addresses
