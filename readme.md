@@ -7,8 +7,8 @@ Go lib to interact with flexradio 6k series
 ### iq-transfer
 Tool to transfer DAX IQ data from a FRS 6K Radio on any platform. Get the latest file for your platform from https://github.com/krippendorf/flexlib-go/releases
 
-Run SmartSDR for Windows on any machine, while pulling the IQ data fron any other machine in the network.
-When you run iq-transfer, make sure, that you select the matching DAX IQ Channel in Smartsdr. (See option CH in options below)
+Run SmartSDR for Windows on any machine, while pulling the IQ data at any other computer in the network.
+When you run iq-transfer, make sure, that you select the matching DAX IQ channel in Smartsdr for windows. (See option CH in options below) (Yes, it must run to use IQ-transfer ...for now)
 
 _Options:_
 * **RADIO** IP address of the radio
