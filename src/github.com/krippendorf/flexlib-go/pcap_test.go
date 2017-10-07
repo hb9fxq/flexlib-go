@@ -18,8 +18,8 @@ THE SOFTWARE.
 package main
 
 import (
-	"../flexlib-go/sdrobjects"
-	"../flexlib-go/vita"
+	"github.com/krippendorf/flexlib-go/sdrobjects"
+	"github.com/krippendorf/flexlib-go/vita"
 	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
@@ -80,21 +80,21 @@ func TestParsePcap(t *testing.T) {
 	}
 
 	// opus stream test output
-	fOpus, err := os.Create("../../test_output/opus_decoded_float_32_LE_24000.raw")
+	fOpus, err := os.Create("../../../../test_output/opus_decoded_float_32_LE_24000.raw")
 	if err != nil {
 		panic(err)
 	}
 	defer fOpus.Close()
 
 	// opus stream test output
-	fDax, err := os.Create("../../test_output/dax_raw_float_32_BE_48000.raw")
+	fDax, err := os.Create("../../../../test_output/dax_raw_float_32_BE_48000.raw")
 	if err != nil {
 		panic(err)
 	}
 	defer fDax.Close()
 
 	// pcap input
-	if handle, err := pcap.OpenOffline("../../test_input/flex.pcap"); err != nil {
+	if handle, err := pcap.OpenOffline("../../../../test_input/flex.pcap"); err != nil {
 		panic(err)
 	} else {
 
@@ -171,7 +171,7 @@ func TestParsePcap(t *testing.T) {
 					break
 				case vita.SL_VITA_IF_NARROW_CLASS:
 					daxPkg := vita.ParseFData(payload, preamble)
-					fDax.Write(daxPkg)
+					fDax.Write(daxPkg.Data)
 					_countDAX++
 					break
 				case vita.SL_VITA_METER_CLASS:

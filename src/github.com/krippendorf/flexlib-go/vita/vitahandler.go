@@ -18,11 +18,15 @@ THE SOFTWARE.
 package vita
 
 import (
-	"../sdrobjects"
+	"github.com/krippendorf/flexlib-go/sdrobjects"
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"math"
+	"os"
 )
+
+var ONE_OVER_ZERO_DBFS = 1.0 / math.Pow(2, 15)
 
 func ParseVitaPreamble(data []byte) (error, *VitaPacketPreamble, []byte) {
 
@@ -76,8 +80,8 @@ func ParseVitaPreamble(data []byte) (error, *VitaPacketPreamble, []byte) {
 	}
 
 	if header.T {
-		index += 4
-		header.payload_cutoff_bytes = 4
+		//index += 4
+		header.Payload_cutoff_bytes = 4
 	}
 
 	return nil, &vitaPacketPreamble, data[index:]
@@ -100,7 +104,7 @@ func ParseVitaFFT(data []byte, preamble *VitaPacketPreamble) *sdrobjects.SdrFFTP
 	fftPacket.FrameIndex = binary.BigEndian.Uint32(data[index : index+4])
 	index += 4
 
-	for i := 0; i < (len(data))-preamble.Header.payload_cutoff_bytes-index; i += 2 {
+	for i := 0; i < (len(data))-preamble.Header.Payload_cutoff_bytes-index; i += 2 {
 		fftPacket.Payload = append(fftPacket.Payload, binary.BigEndian.Uint16(data[i+index:i+index+2]))
 	}
 
@@ -111,7 +115,7 @@ func ParseVitaMeterPacket(data []byte, preamble *VitaPacketPreamble) *sdrobjects
 	index := 0
 	var meterPacket sdrobjects.SdrMeterPacket
 
-	numberOfMeters := (len(data) - preamble.Header.payload_cutoff_bytes) / 4
+	numberOfMeters := (len(data) - preamble.Header.Payload_cutoff_bytes) / 4
 
 	for i := 0; i < numberOfMeters; i++ {
 
@@ -153,7 +157,7 @@ func ParseVitaWaterfall(data []byte, preamble *VitaPacketPreamble) *sdrobjects.S
 	wftile.AutoBlackLevel = binary.BigEndian.Uint32(data[index : index+4])
 	index += 4
 
-	for i := 0; i < (len(data))-preamble.Header.payload_cutoff_bytes-index; i += 2 {
+	for i := 0; i < (len(data))-preamble.Header.Payload_cutoff_bytes-index; i += 2 {
 		wftile.Data = append(wftile.Data, binary.BigEndian.Uint16(data[i+index:i+index+2]))
 	}
 
@@ -161,13 +165,51 @@ func ParseVitaWaterfall(data []byte, preamble *VitaPacketPreamble) *sdrobjects.S
 }
 
 func ParseVitaOpus(data []byte, preamble *VitaPacketPreamble) []byte {
-	return data[:len(data)-preamble.Header.payload_cutoff_bytes]
+	return data[:len(data)-preamble.Header.Payload_cutoff_bytes]
 }
 
-func ParseFData(data []byte, preamble *VitaPacketPreamble) []byte {
-	return data[:len(data)-preamble.Header.payload_cutoff_bytes] // TODO IQ/Streams
+func ParseFData(data []byte, preamble *VitaPacketPreamble) *sdrobjects.SdrIfData {
+
+	payload := data[:len(data)-preamble.Header.Payload_cutoff_bytes]
+
+	var res sdrobjects.SdrIfData
+	res.Stream_id = preamble.Stream_id
+
+	switch preamble.Class_id.PacketClassCode { // dax audio
+	case SL_VITA_IF_NARROW_CLASS:
+		res.Data = payload
+		return &res
+	}
+
+	os.Stdout.Write (payload)
+
+
+	for i := 0; i <= (len(payload)-4)/4; i++ {
+		fVal := getFloat32fromLE(data[i*4 : (i*4)+4]) * float32(ONE_OVER_ZERO_DBFS)
+		res.Data = append(res.Data, getBytesFromFloat(fVal)...)
+	}
+
+
+	return &res
+
+
+
+
+
 }
 
 func ParseDiscoveryPackage(data []byte, preamble *VitaPacketPreamble) string {
 	return string(data[:len(data)-4])
+}
+
+func getFloat32fromLE(bytes []byte) float32 {
+	return  math.Float32frombits(binary.LittleEndian.Uint32(bytes))
+}
+
+
+func getBytesFromFloat(float float32) []byte {
+	bits := math.Float32bits(float)
+	bytes := make([]byte, 4)
+	binary.LittleEndian.PutUint32(bytes, bits)
+	return bytes
 }

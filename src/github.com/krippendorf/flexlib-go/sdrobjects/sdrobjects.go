@@ -43,4 +43,9 @@ type SdrMeterPacket struct {
 	Vals []int16
 }
 
+type SdrIfData struct{
+	Stream_id   uint32
+	Data []byte
+}
+
 

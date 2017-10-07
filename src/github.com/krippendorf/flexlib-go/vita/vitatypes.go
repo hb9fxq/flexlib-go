@@ -79,7 +79,7 @@ type VitaHeader struct {
 	Tsf                  VitaTimeStampFractionalType
 	Packet_count         uint16
 	Packet_size          uint16
-	payload_cutoff_bytes int
+	Payload_cutoff_bytes int
 }
 
 type VitaPacketPreamble struct {
