@@ -23,7 +23,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"math"
-	"os"
 )
 
 var ONE_OVER_ZERO_DBFS = 1.0 / math.Pow(2, 15)
@@ -181,21 +180,11 @@ func ParseFData(data []byte, preamble *VitaPacketPreamble) *sdrobjects.SdrIfData
 		return &res
 	}
 
-	os.Stdout.Write (payload)
-
-
 	for i := 0; i <= (len(payload)-4)/4; i++ {
 		fVal := getFloat32fromLE(data[i*4 : (i*4)+4]) * float32(ONE_OVER_ZERO_DBFS)
 		res.Data = append(res.Data, getBytesFromFloat(fVal)...)
 	}
-
-
 	return &res
-
-
-
-
-
 }
 
 func ParseDiscoveryPackage(data []byte, preamble *VitaPacketPreamble) string {

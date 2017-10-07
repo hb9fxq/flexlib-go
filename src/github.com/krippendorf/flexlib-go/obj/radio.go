@@ -105,6 +105,10 @@ func InitRadioContext(ctx *RadioContext) {
 	SendRadioCommand(ctx, "sub daxiq all")
 	SendRadioCommand(ctx, "sub dax all")
 	SendRadioCommand(ctx, "sub usb_cable all")
+
+	forever := make(chan bool)
+	forever <- true
+
 }
 
 func subscribeRadioUpdates(conn *net.TCPConn, ctx *RadioContext) {

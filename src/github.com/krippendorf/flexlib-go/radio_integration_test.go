@@ -24,6 +24,7 @@ import (
 	"time"
 	"strconv"
 	"github.com/krippendorf/flexlib-go/sdrobjects"
+	"net"
 )
 
 func TestRadioInitIntegration(t *testing.T) {
@@ -71,12 +72,19 @@ func TestRadioSubIqInitIntegration(t *testing.T) {
 		}
 	}(ctx)
 
+	ServerAddr,_ := net.ResolveUDPAddr("udp","192.168.178.75:1234")
+	LocalAddr, _ := net.ResolveUDPAddr("udp", "192.168.178.75:0")
+
+	Conn, _ := net.DialUDP("udp", LocalAddr, ServerAddr)
+
+
 	go func(ctx *obj.RadioContext) {
 
 		cnt := 0
 
 		for {
-			<-ctx.ChannelVitaIfData
+			dat := <-ctx.ChannelVitaIfData
+			Conn.Write(dat.Data)
 			cnt++
 			if(cnt%500 == 0){
 				fmt.Println("VitaIfDataPacket count: " + strconv.Itoa(cnt))
