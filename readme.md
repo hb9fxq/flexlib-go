@@ -35,7 +35,7 @@ start_rtl_command="/home/f102/wrk/flexlib-go/bin/iq-transfer_linux64 --RADIO=192
 format_conversion=""
 ```
 
-![alt text](https://github.com/krippendorf/flexlib-go/raw/assets/GRC/GRC/iq-transfer/openwebrx.png "DAX IQ to OpenWebRX")
+![alt text](https://github.com/krippendorf/flexlib-go/raw/assets/GRC/iq-transfer/openwebrx.png "DAX IQ to OpenWebRX")
 
 
 ## Status
