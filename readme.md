@@ -35,7 +35,7 @@ start_rtl_command="/home/f102/wrk/flexlib-go/bin/iq-transfer_linux64 --RADIO=192
 format_conversion=""
 ```
 
-![alt text](https://github.com/krippendorf/flexlib-go/raw/assets/GRC/iq-transfer/openwebrx.png "DAX IQ to OpenWebRX")
+![alt text](https://raw.githubusercontent.com/krippendorf/flexlib-go/master/assets/GRC/iq-transfer/openwebrx.png "DAX IQ to OpenWebRX")
 
 
 ## Status
@@ -45,7 +45,7 @@ Currently working on a [pcap](https://github.com/krippendorf/flexlib-go/tree/mas
 
 Reconstructed waterfall tile data from pcap:
 
-![alt text](https://github.com/krippendorf/flexlib-go/raw/master/assets/test_output/waterfall.png "waterfall from pcap")
+![alt text](https://github.com/krippendorf/flexlib-go/raw/master/assets/GRC/test_output/waterfall.png "waterfall from pcap")
 
 Reconstruced opus audio from pcap: 
 
