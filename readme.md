@@ -45,7 +45,7 @@ Currently working on a [pcap](https://github.com/krippendorf/flexlib-go/tree/mas
 
 Reconstructed waterfall tile data from pcap:
 
-![alt text](https://github.com/krippendorf/flexlib-go/raw/master/assets/GRC/test_output/waterfall.png "waterfall from pcap")
+![alt text]https://raw.githubusercontent.com/krippendorf/flexlib-go/master/assets/test_output/waterfall.png "waterfall from pcap")
 
 Reconstruced opus audio from pcap: 
 
