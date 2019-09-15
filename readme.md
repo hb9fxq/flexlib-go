@@ -23,9 +23,9 @@ send data 127.0.0.1:2345 **./iq-transfer_linux64  --RADIO=192.168.92.8 --MYUDP=7
  
 record IQ Data to a file **./iq-transfer_linux64  --RADIO=192.168.92.8 --MYUDP=7799 --CH=1 --RATE=192 > "$(date +"%FT%T").raw"**
 
-![alt text](https://github.com/krippendorf/flexlib-go/raw/master/GRC/iq-transfer/iq_transfer_fft.png "FFT with GRC using iq-transfer util")
+![alt text](https://github.com/krippendorf/flexlib-go/raw/master/assets/GRC/iq-transfer/iq_transfer_fft.png "FFT with GRC using iq-transfer util")
 
-![alt text](https://github.com/krippendorf/flexlib-go/raw/master/GRC/iq-transfer/2017-10-07_20_15_54-SmartSDR-Win.png "DAX IQ setting in SmartSDR")
+![alt text](https://github.com/krippendorf/flexlib-go/raw/master/assets/GRC/iq-transfer/2017-10-07_20_15_54-SmartSDR-Win.png "DAX IQ setting in SmartSDR")
 
 #### DAX IQ Data to OpenWebRx ### 
 
@@ -35,7 +35,7 @@ start_rtl_command="/home/f102/wrk/flexlib-go/bin/iq-transfer_linux64 --RADIO=192
 format_conversion=""
 ```
 
-![alt text](https://github.com/krippendorf/flexlib-go/raw/master/GRC/iq-transfer/openwebrx.png "DAX IQ to OpenWebRX")
+![alt text](https://github.com/krippendorf/flexlib-go/raw/assets/GRC/GRC/iq-transfer/openwebrx.png "DAX IQ to OpenWebRX")
 
 
 ## Status
@@ -45,7 +45,7 @@ Currently working on a [pcap](https://github.com/krippendorf/flexlib-go/tree/mas
 
 Reconstructed waterfall tile data from pcap:
 
-![alt text](https://github.com/krippendorf/flexlib-go/raw/master/test_output/waterfall.png "waterfall from pcap")
+![alt text](https://github.com/krippendorf/flexlib-go/raw/master/assets/test_output/waterfall.png "waterfall from pcap")
 
 Reconstruced opus audio from pcap: 
 
@@ -53,4 +53,4 @@ https://soundcloud.com/frank-werner-krippendorf-14069568/opus-decoded
 
 Reconstructed FFT Plot (all captured values added)
 
-![alt text](https://github.com/krippendorf/flexlib-go/raw/master/test_output/fft.png "fft from pcap")
+![alt text](https://github.com/krippendorf/flexlib-go/raw/master/assets/test_output/fft.png "fft from pcap")
