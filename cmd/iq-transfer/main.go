@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	"github.com/krippendorf/flexlib-go/obj"
-	"github.com/krippendorf/flexlib-go/sdrobjects"
+	"github.com/hb9fxq/flexlib-go/obj"
+	"github.com/hb9fxq/flexlib-go/sdrobjects"
 	"log"
 	"net"
 	"os"

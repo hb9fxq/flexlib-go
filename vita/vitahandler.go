@@ -1,4 +1,4 @@
-/* 2017 by Frank Werner-Krippendorf / HB9FXQ, mail@hb9fxq.ch
+/* 2017 by Frank Werner-hb9fxq / HB9FXQ, mail@hb9fxq.ch
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -18,10 +18,10 @@ THE SOFTWARE.
 package vita
 
 import (
-	"github.com/krippendorf/flexlib-go/sdrobjects"
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"github.com/hb9fxq/flexlib-go/sdrobjects"
 	"math"
 )
 
@@ -181,7 +181,7 @@ func ParseFData(data []byte, preamble *VitaPacketPreamble) *sdrobjects.SdrIfData
 	}
 
 	for i := 0; i <= (len(payload)-4)/4; i++ {
-		fVal := getFloat32fromLE(data[i*4 : (i*4)+4]) * float32(ONE_OVER_ZERO_DBFS)
+		fVal := getFloat32fromLE(data[i*4:(i*4)+4]) * float32(ONE_OVER_ZERO_DBFS)
 		res.Data = append(res.Data, getBytesFromFloat(fVal)...)
 	}
 	return &res
@@ -192,9 +192,8 @@ func ParseDiscoveryPackage(data []byte, preamble *VitaPacketPreamble) string {
 }
 
 func getFloat32fromLE(bytes []byte) float32 {
-	return  math.Float32frombits(binary.LittleEndian.Uint32(bytes))
+	return math.Float32frombits(binary.LittleEndian.Uint32(bytes))
 }
-
 
 func getBytesFromFloat(float float32) []byte {
 	bits := math.Float32bits(float)

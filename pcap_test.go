@@ -1,4 +1,4 @@
-/* 2017 by Frank Werner-Krippendorf / HB9FXQ, mail@hb9fxq.ch
+/* 2017 by Frank Werner-hb9fxq / HB9FXQ, mail@hb9fxq.ch
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -18,11 +18,11 @@ THE SOFTWARE.
 package main
 
 import (
-	"github.com/krippendorf/flexlib-go/sdrobjects"
-	"github.com/krippendorf/flexlib-go/vita"
 	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
+	"github.com/hb9fxq/flexlib-go/sdrobjects"
+	"github.com/hb9fxq/flexlib-go/vita"
 	"github.com/lucasb-eyer/go-colorful"
 	"gopkg.in/hraban/opus.v2"
 	"image"

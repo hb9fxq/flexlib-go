@@ -2,8 +2,8 @@ package obj
 
 import (
 	"errors"
-	"github.com/krippendorf/flexlib-go/sdrobjects"
-	"github.com/krippendorf/flexlib-go/vita"
+	"github.com/hb9fxq/flexlib-go/sdrobjects"
+	"github.com/hb9fxq/flexlib-go/vita"
 	"log"
 	"net"
 	"os"
@@ -19,22 +19,24 @@ type RadioData struct {
 }
 
 type RadioContext struct {
-	RadioAddr                string
+	RadioAddr                string `json:"RadioAddr"`
 	RadioCmdSeqNumber        int
 	RadioConn                *net.TCPConn
-	ChannelRadioData         chan *RadioData
-	ChannelRadioResponse     chan string
+	ChannelRadioData         chan *RadioData `json:"-"`
+	ChannelRadioResponse     chan string     `json:"-"`
 	RadioHandle              string
 	MyUdpEndpointIP          *net.IP
-	MyUdpEndpointPort        string // we need strings for all cmds....
-	ChannelVitaFFT           chan *sdrobjects.SdrFFTPacket
-	ChannelVitaOpus          chan []byte
-	ChannelVitaIfData        chan *sdrobjects.SdrIfData
-	ChannelVitaMeter         chan *sdrobjects.SdrMeterPacket
-	ChannelVitaWaterfallTile chan *sdrobjects.SdrWaterfallTile
-	Panadapters              sync.Map
-	IqStreams                sync.Map
+	MyUdpEndpointPort        string                            // we need strings for all cmds....
+	ChannelVitaFFT           chan *sdrobjects.SdrFFTPacket     `json:"-"`
+	ChannelVitaOpus          chan []byte                       `json:"-"`
+	ChannelVitaIfData        chan *sdrobjects.SdrIfData        `json:"-"`
+	ChannelVitaMeter         chan *sdrobjects.SdrMeterPacket   `json:"-"`
+	ChannelVitaWaterfallTile chan *sdrobjects.SdrWaterfallTile `json:"-"`
+	Panadapters              sync.Map                          `json:"Panadapters"`
+	IqStreams                sync.Map                          `json:"RadioAddr"`
+	Slices                   sync.Map                          `json:"Slices"`
 	Debug                    bool
+	ManualSubscribe          bool
 }
 
 func getNextCommandPrefix(ctx *RadioContext) (string, int) {
@@ -94,20 +96,23 @@ func InitRadioContext(ctx *RadioContext) {
 	go subscribeRadioUpdates(conn, ctx)
 
 	// Subscribe data from radio
-	SendRadioCommand(ctx, "sub tx all")
-	SendRadioCommand(ctx, "sub atu all")
-	SendRadioCommand(ctx, "sub amplifier all")
-	SendRadioCommand(ctx, "sub meter all")
-	SendRadioCommand(ctx, "sub pan all")
-	SendRadioCommand(ctx, "sub slice all")
-	SendRadioCommand(ctx, "sub gps all")
-	SendRadioCommand(ctx, "sub audio_stream all")
-	SendRadioCommand(ctx, "sub cwx all")
-	SendRadioCommand(ctx, "sub xvtr all")
-	SendRadioCommand(ctx, "sub memories all")
-	SendRadioCommand(ctx, "sub daxiq all")
-	SendRadioCommand(ctx, "sub dax all")
-	SendRadioCommand(ctx, "sub usb_cable all")
+
+	if !ctx.ManualSubscribe {
+		SendRadioCommand(ctx, "sub tx all")
+		SendRadioCommand(ctx, "sub atu all")
+		SendRadioCommand(ctx, "sub amplifier all")
+		SendRadioCommand(ctx, "sub meter all")
+		SendRadioCommand(ctx, "sub pan all")
+		SendRadioCommand(ctx, "sub slice all")
+		SendRadioCommand(ctx, "sub gps all")
+		SendRadioCommand(ctx, "sub audio_stream all")
+		SendRadioCommand(ctx, "sub cwx all")
+		SendRadioCommand(ctx, "sub xvtr all")
+		SendRadioCommand(ctx, "sub memories all")
+		SendRadioCommand(ctx, "sub daxiq all")
+		SendRadioCommand(ctx, "sub dax all")
+		SendRadioCommand(ctx, "sub usb_cable all")
+	}
 
 	forever := make(chan bool)
 	forever <- true
@@ -146,13 +151,14 @@ func subscribeRadioUpdates(conn *net.TCPConn, ctx *RadioContext) {
 			} else {
 
 				if nil == ctx.ChannelRadioResponse {
-					l.Println("Respnse Channel not bound: " + responseLine)
+					l.Println("Response channel not bound: " + responseLine)
 				} else {
 					ctx.ChannelRadioResponse <- responseLine
-					parseResponseLine(ctx, responseLine)
+
 					if ctx.Debug {
 						l.Println("DEBU:RESP:" + responseLine)
 					}
+					parseResponseLine(ctx, responseLine)
 				}
 			}
 		}
@@ -170,6 +176,8 @@ func parseResponseLine(context *RadioContext, respLine string) {
 		parsePanAdapterParams(context, message)
 	} else if strings.Contains(message, "daxiq ") {
 		parseDaxIqStatusParams(context, message)
+	} else if strings.Contains(message, "slice ") {
+		parseSliceParams(context, message)
 	}
 }
 
@@ -177,42 +185,118 @@ func parsePanAdapterParams(context *RadioContext, i string) {
 	/*
 		>0x40000000 wnb=0 wnb_level=50 wnb_updating=0 x_pixels=490 y_pixels=535 center=3.792057 bandwidth=0.885342 min_dbm=-126.84 max_dbm=-66.812 fps=5 average=70 weighted_average=0 rfgain=0 rxant=ANT2 wide=1 loopa=0 loopb=0 band=80 daxiq=0 daxiq_rate=0 capacity=16 available=16 waterfall=42000000 min_bw=0.004919999957085 max_b<>w=14.74560058594 xvtr= pre= ant_list=ANT1,ANT2,RX_A,XVTR<
 	*/
-	_, res, objectValue := parseKeyValueString(i, 1)
+	_, res := parseKeyValueString(i)
+
+	if 1 > len(res["STMT2"]) {
+		return
+	}
+
+	if strings.Contains(i, " removed") {
+		context.Panadapters.Delete(res["STMT2"])
+		return
+	}
 
 	var panadapter Panadapter
-	panadapter.Id = objectValue
-	dirty := false;
+	panadapter.Id = res["STMT2"]
+	dirty := false
 
-	actual, loaded := context.Panadapters.LoadOrStore(objectValue, panadapter)
+	actual, loaded := context.Panadapters.LoadOrStore(res["STMT2"], panadapter)
 
-	if(loaded){
+	if loaded {
 		panadapter = actual.(Panadapter)
 	}
 
 	if val, ok := res["center"]; ok {
 		rawFloatCenter, _ := strconv.ParseFloat(val, 64)
-		panadapter.Center = int32(rawFloatCenter*1000000)
+		panadapter.Center = int32(rawFloatCenter * 1000000)
 		dirty = true
 	}
 
 	if dirty {
-		context.Panadapters.Store(objectValue, panadapter)
+		context.Panadapters.Store(res["STMT2"], panadapter)
+	}
+}
+
+func parseSliceParams(context *RadioContext, i string) {
+
+	_, res := parseKeyValueString(i)
+
+	if 1 > len(res["STMT1"]) {
+		return
+	}
+
+	var slice Slice
+	slice.Id = res["STMT1"]
+	dirty := false
+
+	actual, loaded := context.Slices.LoadOrStore(res["STMT1"], slice)
+
+	if loaded {
+		slice = actual.(Slice)
+	}
+
+	if val, ok := res["client_handle"]; ok {
+		slice.ClientHandle = val
+		dirty = true
+	}
+
+	if val, ok := res["txant"]; ok {
+		slice.TxAnt = val
+		dirty = true
+	}
+
+	if val, ok := res["mode"]; ok {
+		slice.Mode = val
+		dirty = true
+	}
+
+	if val, ok := res["rxant"]; ok {
+		slice.RxAnt = val
+		dirty = true
+	}
+
+	if val, ok := res["pan"]; ok {
+		slice.Panadapter = val
+		dirty = true
+	}
+
+	if val, ok := res["index_letter"]; ok {
+		slice.IndexLetter = val
+		dirty = true
+	}
+
+	if val, ok := res["in_use"]; ok {
+		if val == "0" {
+			context.Slices.Delete(res["STMT1"])
+			return
+		} else {
+			slice.InUse = true
+			dirty = true
+		}
+	}
+
+	if val, ok := res["RF_frequency"]; ok {
+		rawFloatCenter, _ := strconv.ParseFloat(val, 64)
+		slice.RfFrequency = rawFloatCenter
+		dirty = true
+	}
+
+	if dirty {
+		context.Slices.Store(res["STMT1"], slice)
 	}
 }
 
 func parseDaxIqStatusParams(context *RadioContext, i string) {
+	_, res := parseKeyValueString(i)
 
-
-	_, res, objectValue := parseKeyValueString(i, 1)
-
-	streamId, _ := strconv.Atoi(objectValue)
+	streamId, _ := strconv.Atoi(res["STMT1"])
 	var iqStream IqStream
 	iqStream.Id = streamId
-	dirty := false;
+	dirty := false
 
-	actual, loaded := context.IqStreams.LoadOrStore(objectValue, iqStream)
+	actual, loaded := context.IqStreams.LoadOrStore(res["STMT1"], iqStream)
 
-	if(loaded){
+	if loaded {
 		iqStream = actual.(IqStream)
 	}
 
@@ -227,7 +311,7 @@ func parseDaxIqStatusParams(context *RadioContext, i string) {
 	}
 
 	if dirty {
-		context.IqStreams.Store(objectValue, iqStream)
+		context.IqStreams.Store(res["STMT1"], iqStream)
 	}
 }
 
@@ -244,7 +328,7 @@ func parseReplyStringPrefix(in string) (string, string) {
 	return prefix, message
 }
 
-func parseKeyValueString(in string, words int) (error, map[string]string, string) {
+func parseKeyValueString(in string) (error, map[string]string) {
 
 	var res map[string]string
 	res = map[string]string{}
@@ -252,15 +336,11 @@ func parseKeyValueString(in string, words int) (error, map[string]string, string
 	tokens := strings.Split(in, " ")
 
 	if len(tokens) == 0 {
-		return errors.New("no tokens found"), res, ""
+		return errors.New("no tokens found"), res
 	}
 
-	if strings.Index(in, "=") < 0 {
-		return errors.New("not a key value list"), res, ""
-	}
+	statements := 0
 
-	skipedWords := 0
-	var objectValue string
 	for rngAttr := range tokens[:] {
 
 		contentTokens := strings.Split(tokens[rngAttr], " ")
@@ -271,18 +351,14 @@ func parseKeyValueString(in string, words int) (error, map[string]string, string
 
 			if len(keyValueTokens) == 2 {
 				res[keyValueTokens[0]] = keyValueTokens[1]
-			} else if len(keyValueTokens) == 1 {
-
-				if skipedWords == words { // first prefix is object identifier itself
-					objectValue = keyValueTokens[0]
-				} else {
-					skipedWords++
-				}
+			} else {
+				res["STMT"+strconv.Itoa(statements)] = keyValueTokens[0]
+				statements++
 			}
 		}
 	}
 
-	return nil, res, objectValue
+	return nil, res
 }
 
 func subscribeRadioUdp(ctx *RadioContext) {

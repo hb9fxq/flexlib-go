@@ -1,4 +1,4 @@
-/* 2017 by Frank Werner-Krippendorf / HB9FXQ, mail@hb9fxq.ch
+/* 2017 by Frank Werner-hb9fxq / HB9FXQ, mail@hb9fxq.ch
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -43,9 +43,7 @@ type SdrMeterPacket struct {
 	Vals []int16
 }
 
-type SdrIfData struct{
-	Stream_id   uint32
-	Data []byte
+type SdrIfData struct {
+	Stream_id uint32
+	Data      []byte
 }
-
-

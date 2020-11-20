@@ -1,4 +1,4 @@
-/* 2017 by Frank Werner-Krippendorf / HB9FXQ, mail@hb9fxq.ch
+/* 2017 by Frank Werner-hb9fxq / HB9FXQ, mail@hb9fxq.ch
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -18,13 +18,13 @@ THE SOFTWARE.
 package main
 
 import (
-	"testing"
-	"github.com/krippendorf/flexlib-go/obj"
 	"fmt"
-	"time"
-	"strconv"
-	"github.com/krippendorf/flexlib-go/sdrobjects"
+	"github.com/hb9fxq/flexlib-go/obj"
+	"github.com/hb9fxq/flexlib-go/sdrobjects"
 	"net"
+	"strconv"
+	"testing"
+	"time"
 )
 
 func TestRadioInitIntegration(t *testing.T) {
@@ -36,25 +36,22 @@ func TestRadioInitIntegration(t *testing.T) {
 
 	go obj.InitRadioContext(ctx)
 
-
 	go func(ctx *obj.RadioContext) {
 		for {
-			fmt.Println(">" +  <-ctx.ChannelRadioResponse + "<")
+			fmt.Println(">" + <-ctx.ChannelRadioResponse + "<")
 		}
 	}(ctx)
 
-	for{
-		if(len(ctx.RadioHandle)>0){
+	for {
+		if len(ctx.RadioHandle) > 0 {
 			break
 		}
 		time.Sleep(500)
 	}
 
-
 	forever := make(chan bool)
 	forever <- true
 }
-
 
 func TestRadioSubIqInitIntegration(t *testing.T) {
 	ctx := new(obj.RadioContext)
@@ -65,18 +62,16 @@ func TestRadioSubIqInitIntegration(t *testing.T) {
 
 	go obj.InitRadioContext(ctx)
 
-
 	go func(ctx *obj.RadioContext) {
 		for {
-			fmt.Println(">" +  <-ctx.ChannelRadioResponse + "<")
+			fmt.Println(">" + <-ctx.ChannelRadioResponse + "<")
 		}
 	}(ctx)
 
-	ServerAddr,_ := net.ResolveUDPAddr("udp","192.168.178.75:1234")
+	ServerAddr, _ := net.ResolveUDPAddr("udp", "192.168.178.75:1234")
 	LocalAddr, _ := net.ResolveUDPAddr("udp", "192.168.178.75:0")
 
 	Conn, _ := net.DialUDP("udp", LocalAddr, ServerAddr)
-
 
 	go func(ctx *obj.RadioContext) {
 
@@ -86,20 +81,20 @@ func TestRadioSubIqInitIntegration(t *testing.T) {
 			dat := <-ctx.ChannelVitaIfData
 			Conn.Write(dat.Data)
 			cnt++
-			if(cnt%500 == 0){
+			if cnt%500 == 0 {
 				fmt.Println("VitaIfDataPacket count: " + strconv.Itoa(cnt))
 			}
 		}
 	}(ctx)
 
-	for{
-		if(len(ctx.RadioHandle)>0){
+	for {
+		if len(ctx.RadioHandle) > 0 {
 			break
 		}
 		time.Sleep(500)
 	}
 
-	obj.SendRadioCommand(ctx, "stream create daxiq=1ip=" + ctx.MyUdpEndpointIP.String() + " port=" + ctx.MyUdpEndpointPort)
+	obj.SendRadioCommand(ctx, "stream create daxiq=1ip="+ctx.MyUdpEndpointIP.String()+" port="+ctx.MyUdpEndpointPort)
 
 	forever := make(chan bool)
 	forever <- true
