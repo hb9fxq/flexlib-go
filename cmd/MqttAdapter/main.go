@@ -25,6 +25,11 @@ type AppContext struct {
 
 const NDEF_STRING string = "NDEF"
 
+func publishRaw(appContext *AppContext, message string) {
+	rtoken := appContext.mqttClient.Publish(appContext.mqttTopic+"/raw", 0, false, message)
+	rtoken.Wait()
+}
+
 func main() {
 
 	appContext := new(AppContext)
@@ -60,8 +65,8 @@ func main() {
 		for {
 			response := <-ctx.ChannelRadioResponse
 			fmt.Println("F:" + response)
-			rtoken := appContext.mqttClient.Publish(appContext.mqttTopic+"/raw", 0, false, response)
-			rtoken.Wait()
+
+			go publishRaw(appContext, response)
 		}
 	}(radioContext)
 
