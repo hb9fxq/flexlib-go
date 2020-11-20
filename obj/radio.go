@@ -158,7 +158,7 @@ func subscribeRadioUpdates(conn *net.TCPConn, ctx *RadioContext) {
 					if ctx.Debug {
 						l.Println("DEBU:RESP:" + responseLine)
 					}
-					parseResponseLine(ctx, responseLine)
+					go parseResponseLine(ctx, responseLine)
 				}
 			}
 		}
