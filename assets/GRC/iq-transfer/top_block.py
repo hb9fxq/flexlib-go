@@ -86,7 +86,7 @@ class top_block(gr.top_block, Qt.QWidget):
             True, #plottime
             True #plotconst
         )
-        self.qtgui_sink_x_0.set_update_time(1.0/10)
+        self.qtgui_sink_x_0.set_update_time(1.0/20)
         self._qtgui_sink_x_0_win = sip.wrapinstance(self.qtgui_sink_x_0.pyqwidget(), Qt.QWidget)
 
         self.qtgui_sink_x_0.enable_rf_freq(False)
@@ -101,8 +101,8 @@ class top_block(gr.top_block, Qt.QWidget):
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.blocks_deinterleave_0, 1), (self.blocks_float_to_complex_0, 1))
         self.connect((self.blocks_deinterleave_0, 0), (self.blocks_float_to_complex_0, 0))
+        self.connect((self.blocks_deinterleave_0, 1), (self.blocks_float_to_complex_0, 1))
         self.connect((self.blocks_float_to_complex_0, 0), (self.qtgui_sink_x_0, 0))
         self.connect((self.blocks_udp_source_0, 0), (self.blocks_deinterleave_0, 0))
 

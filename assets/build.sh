@@ -23,5 +23,5 @@ env GOOS=windows GOARCH=386 go build -o ../../../../bin/flexlib-go/Win32/MqttAda
 
 
 # pfsense
-#env GOOS=freebsd GOARCH=amd64 go build -o ../../../../bin/flexlib-go/pfSense64/iq-transfer github.com/hb9fxq/flexlib-go/cmd/iq-transfer
-#env GOOS=freebsd GOARCH=386 go build -o ../../../../bin/flexlib-go/pfSense32/iq-transfer github.com/hb9fxq/flexlib-go/cmd/iq-transfer
+#env GOOS=freebsd GOARCH=amd64 go build -o ../../../../bin/flexlib-go/pfSense64/iqtransfer github.com/hb9fxq/flexlib-go/cmd/iqtransfer
+#env GOOS=freebsd GOARCH=386 go build -o ../../../../bin/flexlib-go/pfSense32/iqtransfer github.com/hb9fxq/flexlib-go/cmd/iqtransfer
