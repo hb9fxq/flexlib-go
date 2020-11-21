@@ -47,6 +47,8 @@ func getNextCommandPrefix(ctx *RadioContext) (string, int) {
 
 func SendRadioCommand(ctx *RadioContext, cmd string) int {
 
+	l := log.New(os.Stderr, "DEBUG >> ", 0)
+	l.Println(cmd)
 	prefixString, sequence := getNextCommandPrefix(ctx)
 	_, err := ctx.RadioConn.Write([]byte(prefixString + cmd + "\r"))
 
@@ -123,7 +125,7 @@ func InitRadioContext(ctx *RadioContext) {
 
 func subscribeRadioUpdates(conn *net.TCPConn, ctx *RadioContext) {
 
-	l := log.New(os.Stderr, "DEBUG  ", 0)
+	l := log.New(os.Stderr, "DEBUG << ", 0)
 	buf := make([]byte, 4096)
 
 	for {

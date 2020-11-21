@@ -1,10 +1,14 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-##################################################
+
+#
+# SPDX-License-Identifier: GPL-3.0
+#
 # GNU Radio Python Flow Graph
 # Title: Top Block
-# Generated: Sat Oct  7 20:29:38 2017
-##################################################
+# GNU Radio version: 3.8.2.0
+
+from distutils.version import StrictVersion
 
 if __name__ == '__main__':
     import ctypes
@@ -14,28 +18,54 @@ if __name__ == '__main__':
             x11 = ctypes.cdll.LoadLibrary('libX11.so')
             x11.XInitThreads()
         except:
-            print "Warning: failed to XInitThreads()"
+            print("Warning: failed to XInitThreads()")
 
-from gnuradio import blocks
-from gnuradio import eng_notation
-from gnuradio import gr
-from gnuradio import wxgui
-from gnuradio.eng_option import eng_option
-from gnuradio.fft import window
+from PyQt5 import Qt
+from gnuradio import qtgui
 from gnuradio.filter import firdes
-from gnuradio.wxgui import fftsink2
-from gnuradio.wxgui import waterfallsink2
-from grc_gnuradio import wxgui as grc_wxgui
-from optparse import OptionParser
-import wx
+import sip
+from gnuradio import blocks
+from gnuradio import gr
+import sys
+import signal
+from argparse import ArgumentParser
+from gnuradio.eng_arg import eng_float, intx
+from gnuradio import eng_notation
 
+from gnuradio import qtgui
 
-class top_block(grc_wxgui.top_block_gui):
+class top_block(gr.top_block, Qt.QWidget):
 
     def __init__(self):
-        grc_wxgui.top_block_gui.__init__(self, title="Top Block")
-        _icon_path = "/usr/share/icons/hicolor/32x32/apps/gnuradio-grc.png"
-        self.SetIcon(wx.Icon(_icon_path, wx.BITMAP_TYPE_ANY))
+        gr.top_block.__init__(self, "Top Block")
+        Qt.QWidget.__init__(self)
+        self.setWindowTitle("Top Block")
+        qtgui.util.check_set_qss()
+        try:
+            self.setWindowIcon(Qt.QIcon.fromTheme('gnuradio-grc'))
+        except:
+            pass
+        self.top_scroll_layout = Qt.QVBoxLayout()
+        self.setLayout(self.top_scroll_layout)
+        self.top_scroll = Qt.QScrollArea()
+        self.top_scroll.setFrameStyle(Qt.QFrame.NoFrame)
+        self.top_scroll_layout.addWidget(self.top_scroll)
+        self.top_scroll.setWidgetResizable(True)
+        self.top_widget = Qt.QWidget()
+        self.top_scroll.setWidget(self.top_widget)
+        self.top_layout = Qt.QVBoxLayout(self.top_widget)
+        self.top_grid_layout = Qt.QGridLayout()
+        self.top_layout.addLayout(self.top_grid_layout)
+
+        self.settings = Qt.QSettings("GNU Radio", "top_block")
+
+        try:
+            if StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
+                self.restoreGeometry(self.settings.value("geometry").toByteArray())
+            else:
+                self.restoreGeometry(self.settings.value("geometry"))
+        except:
+            pass
 
         ##################################################
         # Variables
@@ -45,65 +75,83 @@ class top_block(grc_wxgui.top_block_gui):
         ##################################################
         # Blocks
         ##################################################
-        self.wxgui_waterfallsink2_0 = waterfallsink2.waterfall_sink_c(
-        	self.GetWin(),
-        	baseband_freq=0,
-        	dynamic_range=100,
-        	ref_level=0,
-        	ref_scale=2.0,
-        	sample_rate=samp_rate,
-        	fft_size=4096,
-        	fft_rate=20,
-        	average=False,
-        	avg_alpha=None,
-        	title="Flexradio IQ Stream 192kHz",
+        self.qtgui_sink_x_0 = qtgui.sink_c(
+            4096, #fftsize
+            firdes.WIN_BLACKMAN_hARRIS, #wintype
+            0, #fc
+            samp_rate, #bw
+            "", #name
+            True, #plotfreq
+            True, #plotwaterfall
+            True, #plottime
+            True #plotconst
         )
-        self.Add(self.wxgui_waterfallsink2_0.win)
-        self.wxgui_fftsink2_0 = fftsink2.fft_sink_c(
-        	self.GetWin(),
-        	baseband_freq=0,
-        	y_per_div=10,
-        	y_divs=10,
-        	ref_level=0,
-        	ref_scale=2.0,
-        	sample_rate=samp_rate,
-        	fft_size=4096,
-        	fft_rate=15,
-        	average=True,
-        	avg_alpha=None,
-        	title="FFT Plot Flexradio IQ Stream 192kHz",
-        	peak_hold=False,
-        	win=window.hamming,
-        )
-        self.Add(self.wxgui_fftsink2_0.win)
-        self.blocks_udp_source_0 = blocks.udp_source(gr.sizeof_float*1, "127.0.0.1", 2345, 4096, True)
+        self.qtgui_sink_x_0.set_update_time(1.0/10)
+        self._qtgui_sink_x_0_win = sip.wrapinstance(self.qtgui_sink_x_0.pyqwidget(), Qt.QWidget)
+
+        self.qtgui_sink_x_0.enable_rf_freq(False)
+
+        self.top_grid_layout.addWidget(self._qtgui_sink_x_0_win)
+        self.blocks_udp_source_0 = blocks.udp_source(gr.sizeof_float*1, '127.0.0.1', 2345, 4096, True)
         self.blocks_float_to_complex_0 = blocks.float_to_complex(1)
         self.blocks_deinterleave_0 = blocks.deinterleave(gr.sizeof_float*1, 1)
+
+
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.blocks_deinterleave_0, 0), (self.blocks_float_to_complex_0, 0))    
-        self.connect((self.blocks_deinterleave_0, 1), (self.blocks_float_to_complex_0, 1))    
-        self.connect((self.blocks_float_to_complex_0, 0), (self.wxgui_fftsink2_0, 0))    
-        self.connect((self.blocks_float_to_complex_0, 0), (self.wxgui_waterfallsink2_0, 0))    
-        self.connect((self.blocks_udp_source_0, 0), (self.blocks_deinterleave_0, 0))    
+        self.connect((self.blocks_deinterleave_0, 1), (self.blocks_float_to_complex_0, 1))
+        self.connect((self.blocks_deinterleave_0, 0), (self.blocks_float_to_complex_0, 0))
+        self.connect((self.blocks_float_to_complex_0, 0), (self.qtgui_sink_x_0, 0))
+        self.connect((self.blocks_udp_source_0, 0), (self.blocks_deinterleave_0, 0))
+
+
+    def closeEvent(self, event):
+        self.settings = Qt.QSettings("GNU Radio", "top_block")
+        self.settings.setValue("geometry", self.saveGeometry())
+        event.accept()
 
     def get_samp_rate(self):
         return self.samp_rate
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-        self.wxgui_fftsink2_0.set_sample_rate(self.samp_rate)
-        self.wxgui_waterfallsink2_0.set_sample_rate(self.samp_rate)
+        self.qtgui_sink_x_0.set_frequency_range(0, self.samp_rate)
+
+
+
 
 
 def main(top_block_cls=top_block, options=None):
 
-    tb = top_block_cls()
-    tb.Start(True)
-    tb.Wait()
+    if StrictVersion("4.5.0") <= StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
+        style = gr.prefs().get_string('qtgui', 'style', 'raster')
+        Qt.QApplication.setGraphicsSystem(style)
+    qapp = Qt.QApplication(sys.argv)
 
+    tb = top_block_cls()
+
+    tb.start()
+
+    tb.show()
+
+    def sig_handler(sig=None, frame=None):
+        Qt.QApplication.quit()
+
+    signal.signal(signal.SIGINT, sig_handler)
+    signal.signal(signal.SIGTERM, sig_handler)
+
+    timer = Qt.QTimer()
+    timer.start(500)
+    timer.timeout.connect(lambda: None)
+
+    def quitting():
+        tb.stop()
+        tb.wait()
+
+    qapp.aboutToQuit.connect(quitting)
+    qapp.exec_()
 
 if __name__ == '__main__':
     main()

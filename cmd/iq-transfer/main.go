@@ -49,14 +49,12 @@ func main() {
 	radioContext.ChannelVitaIfData = make(chan *sdrobjects.SdrIfData)
 	radioContext.Debug = true
 
-	go obj.InitRadioContext(radioContext)
-
 	go func(ctx *obj.RadioContext) {
 		for {
 			response := <-ctx.ChannelRadioResponse
 
 			if strings.HasPrefix(response, "R"+strconv.Itoa(appContext.RadioReponseStreamSequence)) {
-				cmd := "daxiq set" + appContext.daxIqChan + " rate=" + appContext.sampleRate + "000"
+				cmd := "daxiq set" + appContext.daxIqChan + " daxiq_rate=" + appContext.sampleRate + "000"
 				obj.SendRadioCommand(radioContext, cmd)
 			}
 		}
@@ -68,6 +66,8 @@ func main() {
 		}
 	}(radioContext)
 
+	go obj.InitRadioContext(radioContext)
+
 	for {
 		if len(radioContext.RadioHandle) > 0 { // wait until we got our handle
 			break
@@ -75,8 +75,12 @@ func main() {
 		time.Sleep(500)
 	}
 
-	appContext.RadioReponseStreamSequence = obj.SendRadioCommand(radioContext, "stream create daxiq=1ip="+radioContext.MyUdpEndpointIP.String()+" port="+appContext.myPort)
+	obj.SendRadioCommand(radioContext, "client bind client_id=76D40FCB-9FB8-49E1-8A62-7728737A7955")
 
+	obj.SendRadioCommand(radioContext, "client udpport "+appContext.myPort)
+	appContext.RadioReponseStreamSequence = obj.SendRadioCommand(radioContext, "stream create daxiq=1")
+
+	obj.SendRadioCommand(radioContext, "dax iq set 1 pan=0x40000000 rate=192000")
 	var centerFrequencyOfStream int32
 
 	for {
