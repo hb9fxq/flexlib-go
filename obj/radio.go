@@ -426,7 +426,7 @@ func parseKeyValueString(in string) (error, map[string]string) {
 
 func subscribeRadioUdp(ctx *RadioContext) {
 
-	FLexBroadcastAddr, err := net.ResolveUDPAddr("udp", "192.168.178.134:"+ctx.MyUdpEndpointPort)
+	FLexBroadcastAddr, err := net.ResolveUDPAddr("udp", "0.0.0.0:"+ctx.MyUdpEndpointPort)
 
 	if err != nil {
 		panic(err)
