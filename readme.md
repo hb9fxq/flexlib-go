@@ -1,7 +1,7 @@
 # flexlib-go
 Multi platform tools to interact with flexradio 6k series radio.
 
-Currently, any tools, except the MQTT adapter requires a instance of SmartSDR Windows/OSX/IOS to be running. DAX and DAX IQ Data is currently not "headless".
+Currently, any tools, except the MQTT adapter require an instance of SmartSDR Windows/OSX/IOS to be running. DAX and DAX IQ Data is currently not "headless".
 
 ## Installation
 Option A) Binary Download
@@ -35,7 +35,7 @@ _Options:_
 
 __e.g.__
 
-send raw IQ data 127.0.0.1:2345 <pre>./smartsdr-iqtransfer --RADIO=192.168.92.8 --MYUDP=5999 --RATE=192000 --CH=1 --FWD=127.0.0.1:2345</pre>
+Send raw IQ data 127.0.0.1:2345 <pre>./smartsdr-iqtransfer --RADIO=192.168.92.8 --MYUDP=5999 --RATE=192000 --CH=1 --FWD=127.0.0.1:2345</pre>
  
 record IQ Data to a file 
 <pre>./smartsdr-iqtransfer  --RADIO=192.168.92.8 --MYUDP=5999 --RATE=192000 --CH=1 --FWD=127.0.0.1:2345 > "$(date +"%FT%T").raw"</pre>
@@ -68,21 +68,16 @@ Tool to reflect most important radio status, like Slices, Panadapters and connec
 <pre>./smartsdr-mqttadapter --RADIO=192.168.92.8 --MQTTBROKER=tcp://192.168.92.7:1883 --MQTTCLIENTID=flexdev --MQTTTOPIC=flexdev</pre>
 
 
-
 ![alt text](https://github.com/hb9fxq/flexlib-go/raw/master/assets/mqtt_sample.png "DAX IQ setting in SmartSDR")
 
-
-
-## Experiments
+## Some experiments
 The library is currently able to parse most of the VITA 49 types, that the FRS is using... 
-
-Some experiments:
 
 Reconstructed waterfall tile data from pcap:
 
 ![alt text](https://raw.githubusercontent.com/hb9fxq/flexlib-go/master/assets/test_output/waterfall.png "waterfall from pcap")
 
-Reconstruced opus audio from pcap: 
+Reconstructed opus audio from pcap: 
 
 https://soundcloud.com/frank-werner-hb9fxq-14069568/opus-decoded
 
