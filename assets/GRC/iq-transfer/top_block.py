@@ -92,7 +92,7 @@ class top_block(gr.top_block, Qt.QWidget):
         self.qtgui_sink_x_0.enable_rf_freq(False)
 
         self.top_grid_layout.addWidget(self._qtgui_sink_x_0_win)
-        self.blocks_udp_source_0 = blocks.udp_source(gr.sizeof_float*1, '127.0.0.1', 2345, 4096, True)
+        self.blocks_udp_source_0 = blocks.udp_source(gr.sizeof_float*1, '0.0.0.0', 2345, 4096, True)
         self.blocks_float_to_complex_0 = blocks.float_to_complex(1)
         self.blocks_deinterleave_0 = blocks.deinterleave(gr.sizeof_float*1, 1)
 

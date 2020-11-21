@@ -86,7 +86,7 @@ blocks:
     alias: ''
     comment: ''
     eof: 'True'
-    ipaddr: 127.0.0.1
+    ipaddr: 0.0.0.0
     maxoutbuf: '0'
     minoutbuf: '0'
     port: '2345'

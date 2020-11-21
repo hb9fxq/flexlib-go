@@ -66,7 +66,6 @@ func main() {
 	go func(ctx *obj.RadioContext) {
 		for { /* we'll only receive the samples for the stream requested on that port so we can ignore the stream id*/
 			handleData(appContext, *<-ctx.ChannelVitaIfData)
-			print(".")
 		}
 	}(radioContext)
 
