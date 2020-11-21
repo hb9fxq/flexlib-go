@@ -1,8 +1,9 @@
 package obj
 
 type Panadapter struct {
-	Id     string
-	Center int32
+	Id           string
+	Center       int32
+	ClientHandle string
 }
 
 type IqStream struct {

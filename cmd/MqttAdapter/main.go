@@ -54,7 +54,7 @@ func main() {
 	radioContext.RadioAddr = appContext.radioAddr
 	radioContext.MyUdpEndpointPort = appContext.myPort
 	radioContext.ChannelRadioResponse = make(chan string)
-	radioContext.Debug = false
+	radioContext.Debug = true
 	radioContext.ManualSubscribe = true
 
 	go obj.InitRadioContext(radioContext)
@@ -64,12 +64,13 @@ func main() {
 	go func(ctx *obj.RadioContext) {
 		for {
 			response := <-ctx.ChannelRadioResponse
-			fmt.Println("F:" + response)
+			//fmt.Println("F:" + response)
 
 			go publishRaw(appContext, response)
 		}
 	}(radioContext)
 
+	obj.SendRadioCommand(radioContext, "sub client all")
 	obj.SendRadioCommand(radioContext, "sub pan all")
 	obj.SendRadioCommand(radioContext, "sub slice all")
 	obj.SendRadioCommand(radioContext, "sub tx all")
@@ -107,6 +108,20 @@ func main() {
 		ptoken := appContext.mqttClient.Publish(appContext.mqttTopic+"/panadapters", 0, false, j)
 		ptoken.Wait()
 
+		jsonClients := make(map[string]interface{})
+		radioContext.Clients.Range(func(k interface{}, value interface{}) bool {
+			jsonClients[k.(string)] = value
+			return true
+		})
+		j, err = json.Marshal(&jsonClients)
+
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		ctoken := appContext.mqttClient.Publish(appContext.mqttTopic+"/clients", 0, false, j)
+		ctoken.Wait()
 	}
 
 	forever := make(chan bool)

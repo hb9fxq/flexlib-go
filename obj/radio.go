@@ -35,6 +35,7 @@ type RadioContext struct {
 	Panadapters              sync.Map                          `json:"Panadapters"`
 	IqStreams                sync.Map                          `json:"RadioAddr"`
 	Slices                   sync.Map                          `json:"Slices"`
+	Clients                  sync.Map
 	Debug                    bool
 	ManualSubscribe          bool
 }
@@ -99,6 +100,7 @@ func InitRadioContext(ctx *RadioContext) {
 
 	if !ctx.ManualSubscribe {
 		SendRadioCommand(ctx, "sub tx all")
+		SendRadioCommand(ctx, "sub client all")
 		SendRadioCommand(ctx, "sub atu all")
 		SendRadioCommand(ctx, "sub amplifier all")
 		SendRadioCommand(ctx, "sub meter all")
@@ -121,7 +123,7 @@ func InitRadioContext(ctx *RadioContext) {
 
 func subscribeRadioUpdates(conn *net.TCPConn, ctx *RadioContext) {
 
-	l := log.New(os.Stderr, "RADIO_MSG", 0)
+	l := log.New(os.Stderr, "DEBUG  ", 0)
 	buf := make([]byte, 4096)
 
 	for {
@@ -141,13 +143,17 @@ func subscribeRadioUpdates(conn *net.TCPConn, ctx *RadioContext) {
 
 		for _, responseLine := range lines {
 
+			if ctx.Debug {
+				l.Println(responseLine)
+			}
+
 			if len(strings.Trim(responseLine, " ")) == 0 {
 				continue
 			}
 
 			if len(ctx.RadioHandle) == 0 && strings.HasPrefix(strings.ToUpper(responseLine), "H") {
 				ctx.RadioHandle = responseLine[1:]
-				l.Println("\nMY_RADIO_HANDLE>>" + ctx.RadioHandle)
+				l.Println("\nHANDLE >>" + ctx.RadioHandle)
 			} else {
 
 				if nil == ctx.ChannelRadioResponse {
@@ -155,9 +161,6 @@ func subscribeRadioUpdates(conn *net.TCPConn, ctx *RadioContext) {
 				} else {
 					ctx.ChannelRadioResponse <- responseLine
 
-					if ctx.Debug {
-						l.Println("DEBU:RESP:" + responseLine)
-					}
 					go parseResponseLine(ctx, responseLine)
 				}
 			}
@@ -178,6 +181,8 @@ func parseResponseLine(context *RadioContext, respLine string) {
 		parseDaxIqStatusParams(context, message)
 	} else if strings.Contains(message, "slice ") {
 		parseSliceParams(context, message)
+	} else if strings.Contains(message, "client") && (strings.Contains(message, "connected ") || strings.Contains(message, "disconnected ")) {
+		parseClientParams(context, message)
 	}
 }
 
@@ -209,6 +214,11 @@ func parsePanAdapterParams(context *RadioContext, i string) {
 	if val, ok := res["center"]; ok {
 		rawFloatCenter, _ := strconv.ParseFloat(val, 64)
 		panadapter.Center = int32(rawFloatCenter * 1000000)
+		dirty = true
+	}
+
+	if val, ok := res["client_handle"]; ok {
+		panadapter.ClientHandle = val
 		dirty = true
 	}
 
@@ -283,6 +293,56 @@ func parseSliceParams(context *RadioContext, i string) {
 
 	if dirty {
 		context.Slices.Store(res["STMT1"], slice)
+	}
+}
+
+func parseClientParams(context *RadioContext, i string) {
+
+	_, res := parseKeyValueString(i)
+
+	if 1 > len(res["STMT1"]) {
+		return
+	}
+
+	var client Client
+	client.Handle = res["STMT1"]
+	dirty := false
+
+	actual, loaded := context.Clients.LoadOrStore(res["STMT1"], client)
+
+	if loaded {
+		client = actual.(Client)
+	}
+
+	/*
+		DEBUG  SDEC1D512|client 0x5CD6439B connected local_ptt=1 client_id=76D40FCB-9FB8-49E1-8A62-7728737A7955 program=SmartSDR-Mac station=HB9FXQ
+		DEBUG  S5CD6439B|client 0x5CD6439B disconnected forced=0 wan_validation_failed=0 duplicate_client_id=0
+		DEBUG  S5EB17F29|client 0x5EB17F29 connected local_ptt=1 client_id=76D40FCB-9FB8-49E1-8A62-7728737A7955 program=SmartSDR-Mac
+		DEBUG  S5EB17F29|client 0x5EB17F29 connected local_ptt=1 client_id=76D40FCB-9FB8-49E1-8A62-7728737A7955 program=SmartSDR-Mac
+		DEBUG  S5EB17F29|client 0x5EB17F29 connected local_ptt=1 client_id=76D40FCB-9FB8-49E1-8A62-7728737A7955 program=SmartSDR-Mac station=HB9FXQ
+
+	*/
+
+	if val, ok := res["client_id"]; ok {
+		client.ClientId = val
+		dirty = true
+	}
+
+	if val, ok := res["program"]; ok {
+		client.Program = val
+		dirty = true
+	}
+
+	if val, ok := res["STMT2"]; ok {
+
+		if val == "disconnected" {
+			context.Clients.Delete(res["STMT1"])
+			return
+		}
+	}
+
+	if dirty {
+		context.Clients.Store(res["STMT1"], client)
 	}
 }
 
@@ -363,7 +423,7 @@ func parseKeyValueString(in string) (error, map[string]string) {
 
 func subscribeRadioUdp(ctx *RadioContext) {
 
-	FLexBroadcastAddr, err := net.ResolveUDPAddr("udp", ctx.MyUdpEndpointIP.String()+":"+ctx.MyUdpEndpointPort)
+	FLexBroadcastAddr, err := net.ResolveUDPAddr("udp", "192.168.178.134:"+ctx.MyUdpEndpointPort)
 
 	if err != nil {
 		panic(err)
@@ -417,7 +477,7 @@ func dispatchDataToChannels(ctx *RadioContext, data *RadioData) {
 			break
 		case vita.SL_VITA_IF_NARROW_CLASS:
 			if nil != ctx.ChannelVitaIfData {
-				vita.ParseFData(data.Payload, data.Preampble)
+				ctx.ChannelVitaIfData <- vita.ParseFData(data.Payload, data.Preampble)
 			}
 			break
 		case vita.SL_VITA_METER_CLASS:
