@@ -35,8 +35,8 @@ func main() {
 	flag.StringVar(&appContext.forwardAddess, "FWD", "", "If empty, IQ data will be written to stdout. UDP Forward address for the IQ samples with port, e.g. 192.168.50.5:5000")
 	flag.Parse()
 
-	if appContext.sampleRate != "24" && appContext.sampleRate != "48" && appContext.sampleRate != "96" && appContext.sampleRate != "192" {
-		panic("Invalid Sample Rate! Allowed values 24, 48, 96, 192")
+	if appContext.sampleRate != "24000" && appContext.sampleRate != "48000" && appContext.sampleRate != "96000" && appContext.sampleRate != "192000" {
+		panic("Invalid Sample Rate! Allowed values 24000, 48000, 96000, 192000")
 	}
 
 	if len(appContext.forwardAddess) > 0 {
@@ -59,6 +59,7 @@ func main() {
 				l.Println("Stream filter streamId 0x" + streamHexString)
 				stream, _ := strconv.ParseUint(streamHexString, 16, 64)
 				appContext.RadioResponseStream = stream
+				obj.SendRadioCommand(radioContext, "stream set 0x"+streamHexString+" daxiq_rate="+appContext.sampleRate)
 			}
 		}
 	}(radioContext)
@@ -111,28 +112,11 @@ func main() {
 	obj.SendRadioCommand(radioContext, "client bind client_id="+firstClient)
 	obj.SendRadioCommand(radioContext, "client udpport "+appContext.myPort)
 
-	appContext.RadioReponseStreamSequence = obj.SendRadioCommand(radioContext, "stream create daxiq=1")
+	appContext.RadioReponseStreamSequence = obj.SendRadioCommand(radioContext, "stream create type=dax_iq daxiq_channel=1")
 
 	l.Println("binding to panadapter " + firstPan)
-	obj.SendRadioCommand(radioContext, "dax iq set 1 pan="+firstPan+" rate="+appContext.sampleRate+"000")
-	var centerFrequencyOfStream int32
 
-	for {
-
-		if val, ok := radioContext.IqStreams.Load(appContext.daxIqChan); ok {
-			iqStream := val.(obj.IqStream)
-			if len(iqStream.Pan) > 0 {
-
-				if panVal, panOk := radioContext.Panadapters.Load(iqStream.Pan); panOk {
-					pan := panVal.(obj.Panadapter)
-					if centerFrequencyOfStream != pan.Center {
-						centerFrequencyOfStream = pan.Center
-						l.Println("CENTER_FREQ_CHANGE " + strconv.Itoa(int(centerFrequencyOfStream)))
-					}
-				}
-			}
-		}
-	}
+	obj.SendRadioCommand(radioContext, "dax iq set 1 pan="+firstPan+" rate="+appContext.sampleRate)
 
 	if len(appContext.forwardAddess) > 0 {
 		l.Println("Forwarding data to " + appContext.forwardAddess)

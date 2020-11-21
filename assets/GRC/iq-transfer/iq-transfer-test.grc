@@ -41,7 +41,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [8, 160]
+    coordinate: [37, 220]
     rotation: 0
     state: enabled
 - name: blocks_deinterleave_0
@@ -60,7 +60,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [408, 241]
+    coordinate: [358, 406]
     rotation: 0
     state: enabled
 - name: blocks_float_to_complex_0
@@ -76,7 +76,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [600, 241]
+    coordinate: [564, 406]
     rotation: 0
     state: enabled
 - name: blocks_udp_source_0
@@ -97,7 +97,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [184, 231]
+    coordinate: [120, 392]
     rotation: 0
     state: enabled
 - name: qtgui_sink_x_0
@@ -108,7 +108,7 @@ blocks:
     bw: samp_rate
     comment: ''
     fc: '0'
-    fftsize: '4096'
+    fftsize: '1024'
     gui_hint: ''
     maxoutbuf: '0'
     minoutbuf: '0'
@@ -126,7 +126,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [857, 159]
+    coordinate: [813, 418]
     rotation: 0
     state: true
 

@@ -76,7 +76,7 @@ class top_block(gr.top_block, Qt.QWidget):
         # Blocks
         ##################################################
         self.qtgui_sink_x_0 = qtgui.sink_c(
-            4096, #fftsize
+            1024, #fftsize
             firdes.WIN_BLACKMAN_hARRIS, #wintype
             0, #fc
             samp_rate, #bw
@@ -101,8 +101,8 @@ class top_block(gr.top_block, Qt.QWidget):
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.blocks_deinterleave_0, 0), (self.blocks_float_to_complex_0, 0))
         self.connect((self.blocks_deinterleave_0, 1), (self.blocks_float_to_complex_0, 1))
+        self.connect((self.blocks_deinterleave_0, 0), (self.blocks_float_to_complex_0, 0))
         self.connect((self.blocks_float_to_complex_0, 0), (self.qtgui_sink_x_0, 0))
         self.connect((self.blocks_udp_source_0, 0), (self.blocks_deinterleave_0, 0))
 
