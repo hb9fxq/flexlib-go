@@ -1,5 +1,7 @@
 # flexlib-go
-Go lib to interact with flexradio 6k series
+Multi platform tools to interact with flexradio 6k series radio.
+
+Currently, any tools, except the MQTT adapter requires a instance of SmartSDR Windows/OSX/IOS to be running. DAX and DAX IQ Data is currently not "headless".
 
 ## Installation
 Option A) Binary Download
@@ -17,12 +19,12 @@ go get -u github.com/hb9fxq/flexlib-go/cmd/smartsdr-daxclient
 
 ## Tools
 
-### smartsdr-iqtransfer
-Tool to transfer DAX IQ data from a FRS 6K Radio on any platform. Get the latest file for your platform from https://github.com/hb9fxq/flexlib-go/releases
+### Binary "smartsdr-iqtransfer"
+Tool to transfer DAX IQ data from a FRS 6K Radio to any platform.
 
-Run SmartSDR for Windows, Mac or IOS on any machine, while pulling the IQ data at any other computer in the network.
+When you run smartsdr-iqtransfer, make sure, that you select the matching DAX IQ channel in Smartsdr.
 
-When you run iq-transfer, make sure, that you select the matching DAX IQ channel in Smartsdr. (See option CH in options below) (Yes, it must run to use IQ-transfer ...for now)
+fCenter is the center of the GUI Panadapter
 
 _Options:_
 * **RADIO** IP address of the radio
@@ -33,14 +35,14 @@ _Options:_
 
 __e.g.__
 
-send raw IQ data 127.0.0.1:2345 **./smartsdr-iqtransfer  --RADIO=192.168.92.8 --MYUDP=5999 --RATE=192000 --CH=1 --FWD=127.0.0.1:2345**
+send raw IQ data 127.0.0.1:2345 <pre>./smartsdr-iqtransfer --RADIO=192.168.92.8 --MYUDP=5999 --RATE=192000 --CH=1 --FWD=127.0.0.1:2345</pre>
  
-record IQ Data to a file **./smartsdr-iqtransfer  --RADIO=192.168.92.8 --MYUDP=5999 --RATE=192000 --CH=1 --FWD=127.0.0.1:2345 > "$(date +"%FT%T").raw"**
+record IQ Data to a file 
+<pre>./smartsdr-iqtransfer  --RADIO=192.168.92.8 --MYUDP=5999 --RATE=192000 --CH=1 --FWD=127.0.0.1:2345 > "$(date +"%FT%T").raw"</pre>
 
 ![alt text](https://github.com/hb9fxq/flexlib-go/raw/master/assets/grc_sample.png "FFT with GRC using iq-transfer util")
 
-
-### smartsdr-daxclient
+### Binary "smartsdr-daxclient"
 
 Receives RAW DAX audio streams (RX Channels 1-6)
 
@@ -51,13 +53,21 @@ _Options:_
 * **FWD** Endpoint to send the Float32 IQ data to. If not supplied, the data is written to stdout and can be used for piping. You can find a sample for GNU Radio under https://github.com/hb9fxq/flexlib-go/tree/master/GRC/iq-transfer
 
 e.g.
-**./smartsdr-daxclient --RADIO=192.168.92.8 --MYUDP=5999 --CH=1 --FWD=127.0.0.1:2345**
+Forward raw DAX audio stream from channel 1 to a computer on the network (FWD)
+<pre>./smartsdr-daxclient --RADIO=192.168.92.8 --MYUDP=5999 --CH=1 --FWD=127.0.0.1:2345</pre>
 
-### smartsdr-daxclient
+Play RAW audio to the speaker. 2 Channels, 32 Bit float, big endian
+<pre>socat -u udp-recv:2345 - | play -q -t f32 -r 24k --endian big -c 2 -</pre>
 
-Tool to reflect most important radio status, like Slices, Panadapters and connected clients to an MQTT broker. Useful for status monitoring, dashboards or advanced radio integration
+![alt text](https://github.com/hb9fxq/flexlib-go/raw/master/assets/wsjtx_use_case.png "Pulling DAX Audio to WSJX-T on Ubuntu")
 
-**./smartsdr-mqttadapter --RADIO=192.168.92.8 --MQTTBROKER=tcp://192.168.92.7:1883 --MQTTCLIENTID=flexdev --MQTTTOPIC=flexdev**
+### Binary "smartsdr-mqttadapter"
+
+Tool to reflect most important radio status, like Slices, Panadapters and connected clients to a MQTT broker. Useful for status monitoring, dashboards or advanced radio integration.
+
+<pre>./smartsdr-mqttadapter --RADIO=192.168.92.8 --MQTTBROKER=tcp://192.168.92.7:1883 --MQTTCLIENTID=flexdev --MQTTTOPIC=flexdev</pre>
+
+
 
 ![alt text](https://github.com/hb9fxq/flexlib-go/raw/master/assets/mqtt_sample.png "DAX IQ setting in SmartSDR")
 
