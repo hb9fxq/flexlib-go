@@ -135,6 +135,10 @@ func main() {
 		}
 	}
 
+	if len(appContext.forwardAddess) > 0 {
+		l.Println("Forwarding data to " + appContext.forwardAddess)
+	}
+
 	forever := make(chan bool)
 	forever <- true
 }
