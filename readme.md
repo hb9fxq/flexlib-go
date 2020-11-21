@@ -35,9 +35,8 @@ send raw IQ data 127.0.0.1:2345 **./smartsdr-iqtransfer  --RADIO=192.168.92.8 --
  
 record IQ Data to a file **./smartsdr-iqtransfer  --RADIO=192.168.92.8 --MYUDP=5999 --RATE=192000 --CH=1 --FWD=127.0.0.1:2345 > "$(date +"%FT%T").raw"**
 
-![alt text](https://github.com/hb9fxq/flexlib-go/raw/master/assets/GRC/iq-transfer/iq_transfer_fft.png "FFT with GRC using iq-transfer util")
+![alt text](https://github.com/hb9fxq/flexlib-go/raw/master/assets/grc_sample.png "FFT with GRC using iq-transfer util")
 
-![alt text](https://github.com/hb9fxq/flexlib-go/raw/master/assets/GRC/iq-transfer/2017-10-07_20_15_54-SmartSDR-Win.png "DAX IQ setting in SmartSDR")
 
 ### smartsdr-daxclient
 
