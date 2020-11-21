@@ -238,7 +238,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [511, 520]
+    coordinate: [650, 226]
     rotation: 0
     state: true
 
