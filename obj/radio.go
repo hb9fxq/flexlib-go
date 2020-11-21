@@ -48,8 +48,9 @@ func getNextCommandPrefix(ctx *RadioContext) (string, int) {
 func SendRadioCommand(ctx *RadioContext, cmd string) int {
 
 	l := log.New(os.Stderr, "DEBUG >> ", 0)
-	l.Println(cmd)
+
 	prefixString, sequence := getNextCommandPrefix(ctx)
+	l.Println(prefixString + cmd)
 	_, err := ctx.RadioConn.Write([]byte(prefixString + cmd + "\r"))
 
 	if err != nil {

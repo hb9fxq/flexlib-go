@@ -19,12 +19,13 @@ type AppContext struct {
 	sampleRate                 string
 	forwardAddess              string
 	RadioReponseStreamSequence int
+	RadioResponseStream        uint64
 	forwardConnection          net.Conn
 }
 
 func main() {
 
-	l := log.New(os.Stderr, "RADIO_MSG", 0)
+	l := log.New(os.Stderr, "RADIO_MSG ", 0)
 
 	appContext := new(AppContext)
 	flag.StringVar(&appContext.radioAddr, "RADIO", "", "IP ADDRESS OF THE RADIO e.g 192.168.41.8")
@@ -54,8 +55,10 @@ func main() {
 			response := <-ctx.ChannelRadioResponse
 
 			if strings.HasPrefix(response, "R"+strconv.Itoa(appContext.RadioReponseStreamSequence)) {
-				cmd := "daxiq set" + appContext.daxIqChan + " daxiq_rate=" + appContext.sampleRate + "000"
-				obj.SendRadioCommand(radioContext, cmd)
+				streamHexString := strings.Split(response, "|")[2]
+				l.Println("Stream filter streamId 0x" + streamHexString)
+				stream, _ := strconv.ParseUint(streamHexString, 16, 64)
+				appContext.RadioResponseStream = stream
 			}
 		}
 	}(radioContext)
@@ -75,12 +78,43 @@ func main() {
 		time.Sleep(500)
 	}
 
-	obj.SendRadioCommand(radioContext, "client bind client_id=76D40FCB-9FB8-49E1-8A62-7728737A7955")
+	// wait for first clientId
+	var firstClient = ""
+	l.Println("waiting for first client")
+	for {
 
+		radioContext.Clients.Range(func(k interface{}, value interface{}) bool {
+			firstClient = value.(obj.Client).ClientId
+			return true
+		})
+
+		if firstClient != "" {
+			break
+		}
+	}
+
+	// wait for first panadapter
+	var firstPan = ""
+	l.Println("waiting for first panadapter")
+	for {
+
+		radioContext.Panadapters.Range(func(k interface{}, value interface{}) bool {
+			firstPan = value.(obj.Panadapter).Id
+			return true
+		})
+
+		if firstPan != "" {
+			break
+		}
+	}
+	l.Println("Binding to client_id " + firstClient)
+	obj.SendRadioCommand(radioContext, "client bind client_id="+firstClient)
 	obj.SendRadioCommand(radioContext, "client udpport "+appContext.myPort)
+
 	appContext.RadioReponseStreamSequence = obj.SendRadioCommand(radioContext, "stream create daxiq=1")
 
-	obj.SendRadioCommand(radioContext, "dax iq set 1 pan=0x40000000 rate=192000")
+	l.Println("binding to panadapter " + firstPan)
+	obj.SendRadioCommand(radioContext, "dax iq set 1 pan="+firstPan+" rate="+appContext.sampleRate+"000")
 	var centerFrequencyOfStream int32
 
 	for {
@@ -96,7 +130,6 @@ func main() {
 						l.Println("CENTER_FREQ_CHANGE " + strconv.Itoa(int(centerFrequencyOfStream)))
 					}
 				}
-
 			}
 		}
 	}
@@ -106,13 +139,14 @@ func main() {
 }
 
 func handleData(appctx *AppContext, ifDataPackage sdrobjects.SdrIfData) {
+
+	if uint64(ifDataPackage.Stream_id) != appctx.RadioResponseStream {
+		return
+	}
+
 	if len(appctx.forwardAddess) > 0 {
 		appctx.forwardConnection.Write(ifDataPackage.Data)
 	} else {
 		os.Stdout.Write(ifDataPackage.Data)
 	}
-}
-
-func FloatToString(input_num float64) string {
-	return strconv.FormatFloat(input_num, 'f', 6, 64)
 }
