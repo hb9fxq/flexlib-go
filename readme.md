@@ -9,6 +9,7 @@ Go lib to interact with flexradio 6k series
 <pre>
 go get -u github.com/hb9fxq/flexlib-go/cmd/smartsdr-iqtransfer
 go get -u github.com/hb9fxq/flexlib-go/cmd/smartsdr-mqttadapter
+go get -u github.com/hb9fxq/flexlib-go/cmd/smartsdr-daxclient
 </pre>
 
 

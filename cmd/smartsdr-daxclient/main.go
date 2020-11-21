@@ -30,14 +30,9 @@ func main() {
 	appContext := new(AppContext)
 	flag.StringVar(&appContext.radioAddr, "RADIO", "", "IP ADDRESS OF THE RADIO e.g 192.168.41.8")
 	flag.StringVar(&appContext.myPort, "MYUDP", "", "LOCAL UDP PORT 7788")
-	flag.StringVar(&appContext.daxIqChan, "CH", "", "DAX IQ CHANNEL NUMBER e.g. ")
-	flag.StringVar(&appContext.sampleRate, "RATE", "", "DAX IQ sample rate in kHz - 24 / 48 / 96 / 192")
+	flag.StringVar(&appContext.daxIqChan, "CH", "", "DAX CHANNEL NUMBER e.g. 2")
 	flag.StringVar(&appContext.forwardAddess, "FWD", "", "If empty, IQ data will be written to stdout. UDP Forward address for the IQ samples with port, e.g. 192.168.50.5:5000")
 	flag.Parse()
-
-	if appContext.sampleRate != "24000" && appContext.sampleRate != "48000" && appContext.sampleRate != "96000" && appContext.sampleRate != "192000" {
-		panic("Invalid Sample Rate! Allowed values 24000, 48000, 96000, 192000")
-	}
 
 	if len(appContext.forwardAddess) > 0 {
 		appContext.forwardConnection, _ = net.Dial("udp", appContext.forwardAddess)
@@ -59,7 +54,7 @@ func main() {
 				l.Println("Stream filter streamId 0x" + streamHexString)
 				stream, _ := strconv.ParseUint(streamHexString, 16, 64)
 				appContext.RadioResponseStream = stream
-				obj.SendRadioCommand(radioContext, "stream set 0x"+streamHexString+" daxiq_rate="+appContext.sampleRate)
+
 			}
 		}
 	}(radioContext)
@@ -71,6 +66,7 @@ func main() {
 	}(radioContext)
 
 	go obj.InitRadioContext(radioContext)
+	time.Sleep(2 * time.Second)
 
 	for {
 		if len(radioContext.RadioHandle) > 0 { // wait until we got our handle
@@ -78,6 +74,9 @@ func main() {
 		}
 		time.Sleep(500)
 	}
+
+	obj.SendRadioCommand(radioContext, "client program DAX")
+	obj.SendRadioCommand(radioContext, "client set send_reduced_bw_dax=0")
 
 	// wait for first clientId
 	var firstClient = ""
@@ -110,15 +109,12 @@ func main() {
 	}
 	l.Println("Binding to client_id " + firstClient)
 	obj.SendRadioCommand(radioContext, "client bind client_id="+firstClient)
-	l.Println("Requesting UDP VITA data to be sent to " + appContext.myPort)
 
+	l.Println("Requesting UDP VITA data to be sent to " + appContext.myPort)
 	obj.SendRadioCommand(radioContext, "client udpport "+appContext.myPort)
 
-	appContext.RadioReponseStreamSequence = obj.SendRadioCommand(radioContext, "stream create type=dax_iq daxiq_channel=1")
-
-	l.Println("binding to panadapter " + firstPan)
-
-	obj.SendRadioCommand(radioContext, "dax iq set 1 pan="+firstPan+" rate="+appContext.sampleRate)
+	cmd := "stream create type=dax_rx dax_channel=" + appContext.daxIqChan
+	appContext.RadioReponseStreamSequence = obj.SendRadioCommand(radioContext, cmd)
 
 	if len(appContext.forwardAddess) > 0 {
 		l.Println("Forwarding data to " + appContext.forwardAddess)

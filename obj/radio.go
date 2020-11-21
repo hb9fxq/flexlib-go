@@ -273,6 +273,11 @@ func parseSliceParams(context *RadioContext, i string) {
 		dirty = true
 	}
 
+	if val, ok := res["dax"]; ok {
+		slice.Dax = val
+		dirty = true
+	}
+
 	if val, ok := res["index_letter"]; ok {
 		slice.IndexLetter = val
 		dirty = true

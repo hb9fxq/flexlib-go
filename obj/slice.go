@@ -10,6 +10,7 @@ type Slice struct {
 	TxAnt        string
 	RxAnt        string
 	Panadapter   string
+	Dax          string
 }
 
 /*
