@@ -2,16 +2,18 @@
 Go lib to interact with flexradio 6k series
 
 ## Installation
+Option A) Binary Download
+* Download the latest binary release from https://github.com/hb9fxq/flexlib-go/releases
 
-1. Install GO https://golang.org/doc/install
+Option B) Install from source
 
-2. Install CMDs
+* Install GO https://golang.org/doc/install
+* Install CMDs
 <pre>
 go get -u github.com/hb9fxq/flexlib-go/cmd/smartsdr-iqtransfer
 go get -u github.com/hb9fxq/flexlib-go/cmd/smartsdr-mqttadapter
 go get -u github.com/hb9fxq/flexlib-go/cmd/smartsdr-daxclient
 </pre>
-
 
 ## Tools
 
