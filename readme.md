@@ -24,7 +24,7 @@ Tool to transfer DAX IQ data from a FRS 6K Radio to any platform.
 
 When you run smartsdr-iqtransfer, make sure, that you select the matching DAX IQ channel in Smartsdr.
 
-fCenter is the center of the GUI Panadapter
+fCenter is the center of the GUI Panadapter, it can be set via argument '--FCENTER' or changed while running by typing to stdin.
 
 _Options:_
 * **RADIO** IP address of the radio
