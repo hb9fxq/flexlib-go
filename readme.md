@@ -30,15 +30,17 @@ _Options:_
 * **RADIO** IP address of the radio
 * **MYUDP** UDP port on local machine that the radio will send VITA49 traffic. Must be a free port on your machine. Check your firewall! 
 * **CH** DAX-IQ channel to stream.
-* **FWD** Endpoint to send the Float32 IQ data to. If not supplied, the data is written to stdout and can be used for piping. You can find a sample for GNU Radio under https://github.com/hb9fxq/flexlib-go/tree/master/GRC/iq-transfer
+* **FWD** (Optional) Endpoint to send the Float32 IQ data to. If not supplied, the data is written to stdout and can be used for piping. You can find a sample for GNU Radio under https://github.com/hb9fxq/flexlib-go/tree/master/GRC/iq-transfer
 * **RATE** SampleRate in kHz, Possible Values: 24000 48000 96000 192000
+* **FCENTER** (Optional) Initially tune panadapter to fCenter in MHz, e.g. 7.1
+
 
 __e.g.__
 
-Send raw IQ data 127.0.0.1:2345 <pre>./smartsdr-iqtransfer --RADIO=192.168.92.8 --MYUDP=5999 --RATE=192000 --CH=1 --FWD=127.0.0.1:2345</pre>
+Send raw IQ data 127.0.0.1:2345 <pre>./smartsdr-iqtransfer --RADIO=192.168.92.8 --MYUDP=5999 --RATE=192000 --CH=1 --FCENTER=7.1 --FWD=127.0.0.1:2345</pre>
  
 record IQ Data to a file 
-<pre>./smartsdr-iqtransfer  --RADIO=192.168.92.8 --MYUDP=5999 --RATE=192000 --CH=1 --FWD=127.0.0.1:2345 > "$(date +"%FT%T").raw"</pre>
+<pre>./smartsdr-iqtransfer  --RADIO=192.168.92.8 --MYUDP=5999 --RATE=192000 --CH=1 --FCENTER=7.1 --FWD=127.0.0.1:2345 > "$(date +"%FT%T").raw"</pre>
 
 ![alt text](https://github.com/hb9fxq/flexlib-go/raw/master/assets/grc_sample.png "FFT with GRC using iq-transfer util")
 

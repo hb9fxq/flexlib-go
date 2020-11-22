@@ -22,6 +22,7 @@ type AppContext struct {
 	RadioReponseStreamSequence int
 	RadioResponseStream        uint64
 	forwardConnection          net.Conn
+	fCenterArg                 string
 }
 
 func main() {
@@ -34,6 +35,7 @@ func main() {
 	flag.StringVar(&appContext.daxIqChan, "CH", "", "DAX IQ CHANNEL NUMBER e.g. ")
 	flag.StringVar(&appContext.sampleRate, "RATE", "", "DAX IQ sample rate in kHz - 24 / 48 / 96 / 192")
 	flag.StringVar(&appContext.forwardAddess, "FWD", "", "If empty, IQ data will be written to stdout. UDP Forward address for the IQ samples with port, e.g. 192.168.50.5:5000")
+	flag.StringVar(&appContext.fCenterArg, "FCENTER", "", "(Optional) Tune panadapter to initial fCenter (Mhz) e.g. 7.1")
 	flag.Parse()
 
 	if appContext.sampleRate != "24000" && appContext.sampleRate != "48000" && appContext.sampleRate != "96000" && appContext.sampleRate != "192000" {
@@ -134,6 +136,11 @@ func main() {
 	}
 
 	go func(ctx *obj.RadioContext) {
+
+		if appContext.fCenterArg != "" {
+			obj.SendRadioCommand(radioContext, "display pan set "+firstPan+" center="+appContext.fCenterArg)
+			l.Println("Instructed pan " + firstPan + " to tune to " + appContext.fCenterArg + " MHz")
+		}
 
 		for {
 
