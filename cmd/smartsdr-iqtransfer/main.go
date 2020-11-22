@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"github.com/hb9fxq/flexlib-go/obj"
 	"github.com/hb9fxq/flexlib-go/sdrobjects"
@@ -25,7 +26,7 @@ type AppContext struct {
 
 func main() {
 
-	l := log.New(os.Stderr, "RADIO_MSG ", 0)
+	l := log.New(os.Stderr, "IQTRANSFER ", 0)
 
 	appContext := new(AppContext)
 	flag.StringVar(&appContext.radioAddr, "RADIO", "", "IP ADDRESS OF THE RADIO e.g 192.168.41.8")
@@ -48,7 +49,7 @@ func main() {
 	radioContext.MyUdpEndpointPort = appContext.myPort
 	radioContext.ChannelRadioResponse = make(chan string)
 	radioContext.ChannelVitaIfData = make(chan *sdrobjects.SdrIfData)
-	radioContext.Debug = true
+	radioContext.Debug = false
 
 	go func(ctx *obj.RadioContext) {
 		for {
@@ -81,7 +82,11 @@ func main() {
 
 	// wait for first clientId
 	var firstClient = ""
-	l.Println("waiting for first client")
+
+	if radioContext.Debug {
+		l.Println("waiting for first client")
+	}
+
 	for {
 
 		radioContext.Clients.Range(func(k interface{}, value interface{}) bool {
@@ -96,7 +101,11 @@ func main() {
 
 	// wait for first panadapter
 	var firstPan = ""
-	l.Println("waiting for first panadapter")
+
+	if radioContext.Debug {
+		l.Println("waiting for first panadapter")
+	}
+
 	for {
 
 		radioContext.Panadapters.Range(func(k interface{}, value interface{}) bool {
@@ -123,6 +132,25 @@ func main() {
 	if len(appContext.forwardAddess) > 0 {
 		l.Println("Forwarding data to " + appContext.forwardAddess)
 	}
+
+	go func(ctx *obj.RadioContext) {
+
+		for {
+
+			reader := bufio.NewReader(os.Stdin)
+			l.Print("Listening for tuning instruction (MHz) at stdin")
+			text, _ := reader.ReadString('\n')
+			text = strings.Trim(text, " ")
+			text = strings.Trim(text, "\n")
+			if _, err := strconv.ParseFloat(text, 32); err == nil {
+				//obj.SendRadioCommand(radioContext, "display pan s")
+				obj.SendRadioCommand(radioContext, "display pan set "+firstPan+" center="+text)
+				l.Println("Instructed pan " + firstPan + " to tune to" + text + " MHz")
+
+			}
+
+		}
+	}(radioContext)
 
 	forever := make(chan bool)
 	forever <- true
