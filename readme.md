@@ -75,6 +75,10 @@ Tool to reflect most important radio status, like Slices, Panadapters and connec
 ## Some experiments
 The library is currently able to parse most of the VITA 49 types, that the FRS is using... 
 
+SoapySDR Module draft version based on flexlib-go with CGO bindings: 
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/YW4s5wfcFa0/0.jpg)](https://www.youtube.com/watch?v=YW4s5wfcFa0)
+
+
 Reconstructed waterfall tile data from pcap:
 
 ![alt text](https://raw.githubusercontent.com/hb9fxq/flexlib-go/master/assets/test_output/waterfall.png "waterfall from pcap")
@@ -86,3 +90,5 @@ https://soundcloud.com/frank-werner-hb9fxq-14069568/opus-decoded
 Reconstructed FFT Plot (all captured fft points aggregated)
 
 ![alt text](https://github.com/hb9fxq/flexlib-go/raw/master/assets/test_output/fft.png "fft from pcap")
+
+
