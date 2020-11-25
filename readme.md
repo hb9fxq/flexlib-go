@@ -58,8 +58,14 @@ e.g.
 Forward raw DAX audio stream from channel 1 to a computer on the network (FWD)
 <pre>./smartsdr-daxclient --RADIO=192.168.92.8 --MYUDP=5999 --CH=1 --FWD=127.0.0.1:2345</pre>
 
+LiveStream via ffmpeg with libopus transcoding
+<pre>ffmpeg -flags low_delay -fflags nobuffer -f f32be -ar 24000 -ac 2 -i udp://127.0.0.1:2345 -acodec libopus -ar 24000 -f rtp rtp://127.0.0.1:1234 -sdp_file daxslice.sdp</pre>
+
+
 Play RAW audio to the speaker. 2 Channels, 32 Bit float, big endian
 <pre>socat -u udp-recv:2345 - | play -q -t f32 -r 24k --endian big -c 2 -</pre>
+
+
 
 ![alt text](https://github.com/hb9fxq/flexlib-go/raw/master/assets/wsjtx_use_case.png "Pulling DAX Audio to WSJX-T on Ubuntu")
 
