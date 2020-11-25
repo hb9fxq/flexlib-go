@@ -91,19 +91,22 @@ func ParseVitaFFT(data []byte, preamble *VitaPacketPreamble) *sdrobjects.SdrFFTP
 	index := 0
 	var fftPacket sdrobjects.SdrFFTPacket
 
-	fftPacket.StartBin_index = binary.BigEndian.Uint32(data[index : index+4])
-	index += 4
+	fftPacket.StartBin_index = binary.BigEndian.Uint16(data[index : index+2])
+	index += 2
 
-	fftPacket.NumBins = binary.BigEndian.Uint32(data[index : index+4])
-	index += 4
+	fftPacket.NumBins = binary.BigEndian.Uint16(data[index : index+2])
+	index += 2
 
-	fftPacket.BinSize = binary.BigEndian.Uint32(data[index : index+4])
-	index += 4
+	fftPacket.BinSize = binary.BigEndian.Uint16(data[index : index+2])
+	index += 2
+
+	fftPacket.TotalBinsInFrame = binary.BigEndian.Uint16(data[index : index+2])
+	index += 2
 
 	fftPacket.FrameIndex = binary.BigEndian.Uint32(data[index : index+4])
 	index += 4
 
-	for i := 0; i < (len(data))-preamble.Header.Payload_cutoff_bytes-index; i += 2 {
+	for i := 0; i < int(fftPacket.NumBins)*2; i += 2 {
 		fftPacket.Payload = append(fftPacket.Payload, binary.BigEndian.Uint16(data[i+index:i+index+2]))
 	}
 

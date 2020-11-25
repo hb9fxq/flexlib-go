@@ -31,11 +31,12 @@ type SdrWaterfallTile struct {
 }
 
 type SdrFFTPacket struct {
-	StartBin_index uint32
-	NumBins        uint32
-	BinSize        uint32
-	FrameIndex     uint32
-	Payload        []uint16
+	StartBin_index   uint16
+	NumBins          uint16
+	BinSize          uint16
+	FrameIndex       uint32
+	TotalBinsInFrame uint16
+	Payload          []uint16
 }
 
 type SdrMeterPacket struct {
