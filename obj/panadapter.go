@@ -4,6 +4,11 @@ type Panadapter struct {
 	Id           string
 	Center       int32
 	ClientHandle string
+	XPixels      int32
+	YPixels      int32
+	Bandwidth    float64
+	Min_dbm      float64
+	Max_dbm      float64
 }
 
 type IqStream struct {

@@ -228,6 +228,33 @@ func parsePanAdapterParams(context *RadioContext, i string) {
 		dirty = true
 	}
 
+	if val, ok := res["x_pixels"]; ok {
+		raw, _ := strconv.ParseFloat(val, 64)
+		panadapter.XPixels = int32(raw)
+		dirty = true
+	}
+
+	if val, ok := res["y_pixels"]; ok {
+		raw, _ := strconv.ParseFloat(val, 64)
+		panadapter.YPixels = int32(raw)
+		dirty = true
+	}
+
+	if val, ok := res["bandwidth"]; ok {
+		panadapter.Bandwidth, _ = strconv.ParseFloat(val, 64)
+		dirty = true
+	}
+
+	if val, ok := res["min_dbm"]; ok {
+		panadapter.Min_dbm, _ = strconv.ParseFloat(val, 64)
+		dirty = true
+	}
+
+	if val, ok := res["max_dbm"]; ok {
+		panadapter.Max_dbm, _ = strconv.ParseFloat(val, 64)
+		dirty = true
+	}
+
 	if dirty {
 		context.Panadapters.Store(res["STMT2"], panadapter)
 	}
