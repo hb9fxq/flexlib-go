@@ -167,7 +167,7 @@ func subscribeRadioUpdates(conn *net.TCPConn, ctx *RadioContext) {
 				} else {
 					ctx.ChannelRadioResponse <- responseLine
 
-					go parseResponseLine(ctx, responseLine)
+					go ParseResponseLine(ctx, responseLine)
 				}
 			}
 		}
@@ -177,7 +177,7 @@ func subscribeRadioUpdates(conn *net.TCPConn, ctx *RadioContext) {
 		}
 	}
 }
-func parseResponseLine(context *RadioContext, respLine string) {
+func ParseResponseLine(context *RadioContext, respLine string) {
 
 	_, message := parseReplyStringPrefix(respLine)
 
@@ -198,7 +198,13 @@ func parsePanAdapterParams(context *RadioContext, i string) {
 	*/
 	_, res := parseKeyValueString(i)
 
-	if 1 > len(res["STMT2"]) {
+	idSelector := "STMT2"
+
+	if strings.Contains(i, " set ") {
+		idSelector = "STMT3"
+	}
+
+	if 1 > len(res[idSelector]) {
 		return
 	}
 
@@ -208,10 +214,12 @@ func parsePanAdapterParams(context *RadioContext, i string) {
 	}
 
 	var panadapter Panadapter
-	panadapter.Id = res["STMT2"]
+
+	panadapter.Id = res[idSelector]
+
 	dirty := false
 
-	actual, loaded := context.Panadapters.LoadOrStore(res["STMT2"], panadapter)
+	actual, loaded := context.Panadapters.LoadOrStore(res[idSelector], panadapter)
 
 	if loaded {
 		panadapter = actual.(Panadapter)
@@ -225,6 +233,18 @@ func parsePanAdapterParams(context *RadioContext, i string) {
 
 	if val, ok := res["client_handle"]; ok {
 		panadapter.ClientHandle = val
+		dirty = true
+	}
+
+	if val, ok := res["xpixels"]; ok {
+		raw, _ := strconv.ParseFloat(val, 64)
+		panadapter.XPixels = int32(raw)
+		dirty = true
+	}
+
+	if val, ok := res["ypixels"]; ok {
+		raw, _ := strconv.ParseFloat(val, 64)
+		panadapter.YPixels = int32(raw)
 		dirty = true
 	}
 
@@ -256,7 +276,7 @@ func parsePanAdapterParams(context *RadioContext, i string) {
 	}
 
 	if dirty {
-		context.Panadapters.Store(res["STMT2"], panadapter)
+		context.Panadapters.Store(res[idSelector], panadapter)
 	}
 }
 
