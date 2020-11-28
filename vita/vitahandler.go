@@ -138,14 +138,17 @@ func ParseVitaWaterfall(data []byte, preamble *VitaPacketPreamble) *sdrobjects.S
 	index := 0
 	var wftile sdrobjects.SdrWaterfallTile
 
-	wftile.FirstPixelFreq = binary.BigEndian.Uint64(data[index:8]) >> 20
+	wftile.FrameLowFreq = binary.BigEndian.Uint64(data[index:8]) >> 20
 	index += 8
 
 	wftile.BinBandwidth = binary.BigEndian.Uint64(data[index:index+8]) >> 20
 	index += 8
 
-	wftile.LineDurationMS = binary.BigEndian.Uint32(data[index : index+4])
-	index += 4
+	wftile.MysteryValue = binary.BigEndian.Uint16(data[index : index+2])
+	index += 2
+
+	wftile.LineDurationMS = binary.BigEndian.Uint16(data[index : index+2])
+	index += 2
 
 	wftile.Width = binary.BigEndian.Uint16(data[index : index+2])
 	index += 2
@@ -159,7 +162,13 @@ func ParseVitaWaterfall(data []byte, preamble *VitaPacketPreamble) *sdrobjects.S
 	wftile.AutoBlackLevel = binary.BigEndian.Uint32(data[index : index+4])
 	index += 4
 
-	for i := 0; i < (len(data))-preamble.Header.Payload_cutoff_bytes-index; i += 2 {
+	wftile.TotalBinsInFrame = binary.BigEndian.Uint16(data[index : index+2])
+	index += 2
+
+	wftile.FirstBinIndex = binary.BigEndian.Uint16(data[index : index+2])
+	index += 2
+
+	for i := 0; i < (len(data))-preamble.Header.Payload_cutoff_bytes-index-4; /* -4 should not be.... another mytery*/ i += 2 {
 		wftile.Data = append(wftile.Data, binary.BigEndian.Uint16(data[i+index:i+index+2]))
 	}
 
